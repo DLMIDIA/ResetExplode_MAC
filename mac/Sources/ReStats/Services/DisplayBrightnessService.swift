@@ -19,44 +19,61 @@ public struct MonitorDisplayItem: Identifiable, Sendable {
     }
 }
 
-// Assinaturas das APIs privadas do IOKit para Apple Silicon DDC/CI
+// Assinaturas de APIs privadas do IOKit para Apple Silicon DDC/CI
 @_silgen_name("IOAVServiceCreateWithService")
 private func IOAVServiceCreateWithService(_ allocator: CFAllocator?, _ service: io_service_t) -> Unmanaged<CFTypeRef>?
 
 @_silgen_name("IOAVServiceWriteI2C")
 private func IOAVServiceWriteI2C(_ service: CFTypeRef, _ chipAddress: UInt32, _ dataAddress: UInt32, _ inputBuffer: UnsafeMutableRawPointer?, _ inputBufferSize: UInt32) -> IOReturn
 
-// Controlador DDC/CI isolado, sem tocar em atores Swift ou estado compartilhado
+// Rotina IOKit estática de baixo nível isolada de qualquer ator
 private enum DdcCiController {
     static func sendBrightness(percent: UInt8) {
         var iterator: io_iterator_t = 0
         let matching = IOServiceMatching("DCPAVServiceProxy")
         guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else { return }
-        defer { IOObjectRelease(iterator) }
         
         while case let service = IOIteratorNext(iterator), service != 0 {
-            defer { IOObjectRelease(service) }
-            
             let prop = IORegistryEntryCreateCFProperty(service, "Location" as CFString, kCFAllocatorDefault, 0)
-            guard let loc = prop?.takeRetainedValue() as? String, loc == "External" else { continue }
-            
-            guard let avUnmanaged = IOAVServiceCreateWithService(kCFAllocatorDefault, service) else { continue }
-            let avService = avUnmanaged.takeRetainedValue()
-            
-            // Pacote MCCS DDC/CI para VCP 0x10 (Luminância): [0x84, 0x03, 0x10, 0x00, val, checksum]
-            let val = min(100, max(0, percent))
-            var packet: [UInt8] = [0x84, 0x03, 0x10, 0x00, val, 0]
-            
-            // Checksum VESA DDC/CI
-            var chk: UInt8 = (0x37 << 1) ^ 0x51
-            for i in 0..<5 {
-                chk ^= packet[i]
+            if let loc = prop?.takeRetainedValue() as? String, loc == "External" {
+                if let av = IOAVServiceCreateWithService(kCFAllocatorDefault, service)?.takeRetainedValue() {
+                    // Pacote MCCS DDC/CI para VCP 0x10 (Luminância): [0x84, 0x03, 0x10, 0x00, val, checksum]
+                    let val = min(100, max(0, percent))
+                    var packet: [UInt8] = [0x84, 0x03, 0x10, 0x00, val, 0]
+                    
+                    var chk: UInt8 = (0x37 << 1) ^ 0x51
+                    for i in 0..<5 { chk ^= packet[i] }
+                    packet[5] = chk
+                    
+                    _ = packet.withUnsafeMutableBytes { buf in
+                        IOAVServiceWriteI2C(av, 0x37, 0x51, buf.baseAddress, UInt32(buf.count))
+                    }
+                }
             }
-            packet[5] = chk
-            
-            _ = packet.withUnsafeMutableBytes { buf in
-                IOAVServiceWriteI2C(avService, 0x37, 0x51, buf.baseAddress, UInt32(buf.count))
+            IOObjectRelease(service)
+        }
+        IOObjectRelease(iterator)
+    }
+}
+
+// Ator dedicado para serializar e debouncer as mensagens DDC sem GCD e sem tocar na Main Thread
+private actor DdcWorker {
+    static let shared = DdcWorker()
+    private var isSending = false
+    private var pendingPercent: UInt8?
+    
+    func schedule(percent: UInt8) {
+        pendingPercent = percent
+        guard !isSending else { return }
+        isSending = true
+        
+        Task {
+            while let p = self.pendingPercent {
+                self.pendingPercent = nil
+                DdcCiController.sendBrightness(percent: p)
+                try? await Task.sleep(nanoseconds: 35_000_000) // 35ms para proteção do barramento I2C
             }
+            self.isSending = false
         }
     }
 }
@@ -72,7 +89,6 @@ public final class DisplayBrightnessService: ObservableObject {
     private var setBrightnessFunc: SetBrightnessFunc?
     
     private var brightnessCache: [CGDirectDisplayID: Float] = [:]
-    private var ddcDebounceWorkItem: DispatchWorkItem?
     
     private init() {
         if let handle = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_NOW) {
@@ -155,21 +171,12 @@ public final class DisplayBrightnessService: ObservableObject {
             }
             return true
         } else {
-            // 2. Monitor Externo (LG ULTRAWIDE, etc.): DDC/CI por hardware assíncrono e seguro
+            // 2. Monitor Externo (LG, Dell, etc.): DDC/CI gerenciado pelo DdcWorker com Actor isolation
             let percent = UInt8(clamped * 100)
-            debounceSendDDC(brightnessPercent: percent)
+            Task {
+                await DdcWorker.shared.schedule(percent: percent)
+            }
             return true
         }
-    }
-    
-    private func debounceSendDDC(brightnessPercent: UInt8) {
-        ddcDebounceWorkItem?.cancel()
-        
-        // Captura apenas o valor primitivo 'brightnessPercent', sem capturar 'self'
-        let workItem = DispatchWorkItem {
-            DdcCiController.sendBrightness(percent: brightnessPercent)
-        }
-        ddcDebounceWorkItem = workItem
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.04, execute: workItem)
     }
 }
