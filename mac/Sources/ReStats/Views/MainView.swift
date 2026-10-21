@@ -6,7 +6,6 @@ public enum SidebarTab: String, CaseIterable, Identifiable {
     case network = "ReStats Rede"
     case optimizer = "ReStats Otimiza"
     case menubar = "Barra de Menus"
-    case maker = "ReStats Maker"
     case about = "Sobre & Créditos"
     
     public var id: String { rawValue }
@@ -18,7 +17,6 @@ public enum SidebarTab: String, CaseIterable, Identifiable {
         case .network: return "network"
         case .optimizer: return "sparkles"
         case .menubar: return "menubar.rectangle"
-        case .maker: return "cpu"
         case .about: return "info.circle.fill"
         }
     }
@@ -120,8 +118,6 @@ public struct MainView: View {
                 OptimizerView()
             case .menubar:
                 MenuBarSettingsView()
-            case .maker:
-                MakerView()
             case .about:
                 AboutView()
             }

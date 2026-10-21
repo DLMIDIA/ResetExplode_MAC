@@ -3,9 +3,17 @@ import SwiftUI
 public enum BenchTab: String, CaseIterable, Identifiable {
     case cpu = "Processador (CPU)"
     case memory = "Memória (RAM)"
-    case disk = "Discos (Armazenamento)"
+    case disk = "Discos & Armazenamento"
     
     public var id: String { rawValue }
+    
+    public var icon: String {
+        switch self {
+        case .cpu: return "cpu"
+        case .memory: return "memorychip"
+        case .disk: return "internaldrive"
+        }
+    }
 }
 
 public struct BenchmarkView: View {
@@ -45,27 +53,42 @@ public struct BenchmarkView: View {
     
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Cabeçalho
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("RESET BENCH SUITE")
+            VStack(alignment: .leading, spacing: 18) {
+                // Cabeçalho e Abas Não-Sobrepostas
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("RESTATS BENCH SUITE")
                             .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.cyan)
                         Text("Testes Profundos de Força Bruta & Desempenho")
-                            .font(.title)
+                            .font(.title2)
                             .fontWeight(.bold)
                     }
-                    Spacer()
                     
-                    Picker("Categoria", selection: $selectedTab) {
+                    // Barra de Abas Customizada e Responsiva
+                    HStack(spacing: 8) {
                         ForEach(BenchTab.allCases) { tab in
-                            Text(tab.rawValue).tag(tab)
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    selectedTab = tab
+                                }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: tab.icon)
+                                    Text(tab.rawValue)
+                                        .font(.system(size: 13, weight: .semibold))
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(selectedTab == tab ? Color.cyan.opacity(0.2) : Color.white.opacity(0.05))
+                                .foregroundColor(selectedTab == tab ? .cyan : .secondary)
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(.plain)
                         }
+                        Spacer()
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 440)
                 }
                 
                 switch selectedTab {
@@ -88,7 +111,7 @@ public struct BenchmarkView: View {
     private var cpuBenchmarkSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             CardView {
-                HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("CPU PATH TRACING BENCHMARK")
                             .font(.caption)
@@ -96,20 +119,21 @@ public struct BenchmarkView: View {
                             .foregroundColor(.secondary)
                         Text("Cálculo de Iluminação Global por Monte Carlo")
                             .font(.headline)
-                        Text("Renderizador determinístico multi-thread (Cinebench style) com cálculo de raios e esferas reflexivas.")
+                        Text("Renderizador determinístico multithread com sombreamento Phong, reflexões e gravação física em buffer.")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
-                    Spacer()
                     
-                    VStack(alignment: .trailing, spacing: 8) {
-                        Picker("Modo", selection: $isMultiCore) {
+                    HStack(spacing: 12) {
+                        Picker("Modo de Teste", selection: $isMultiCore) {
                             Text("Multi-Core (\(cpuInfo.totalCores) Núcleos)").tag(true)
                             Text("Single-Core (1 Núcleo)").tag(false)
                         }
                         .pickerStyle(.segmented)
-                        .frame(width: 240)
+                        .frame(maxWidth: 340)
                         .disabled(isRunningCpu)
+                        
+                        Spacer()
                         
                         Button(action: runCpuBenchmark) {
                             HStack {
@@ -120,8 +144,8 @@ public struct BenchmarkView: View {
                                 }
                                 Text(isRunningCpu ? "Renderizando..." : "Iniciar Teste CPU")
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 7)
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.cyan)
@@ -131,9 +155,10 @@ public struct BenchmarkView: View {
                 
                 // Visualizador de progresso e buckets
                 if isRunningCpu {
+                    Divider()
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            Text(isMultiCore ? "Renderizando buckets em paralelo (\(cpuInfo.totalCores) threads ativas)..." : "Renderizando em thread única...")
+                            Text(isMultiCore ? "Renderizando buckets em paralelo (\(cpuInfo.totalCores) threads ativas)..." : "Renderizando em thread única dedicada...")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Spacer()
@@ -146,99 +171,89 @@ public struct BenchmarkView: View {
                         ProgressView(value: cpuProgress, total: 1.0)
                             .accentColor(.cyan)
                         
-                        // Grade de visualização dos buckets Cinebench
                         HStack(spacing: 2) {
                             ForEach(0..<40) { i in
                                 Rectangle()
-                                    .fill(Double(i) / 40.0 <= cpuProgress ? Color.orange : Color.white.opacity(0.1))
-                                    .frame(height: 8)
+                                    .fill(Double(i) / 40.0 <= cpuProgress ? Color.cyan : Color.white.opacity(0.1))
+                                    .frame(height: 6)
                                     .cornerRadius(1)
                             }
                         }
                     }
                 }
                 
+                // Resultado CPU
                 if let res = cpuResult {
                     Divider()
-                    HStack(spacing: 36) {
+                    HStack(spacing: 40) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(res.isMultiCore ? "PONTUAÇÃO MULTI-CORE" : "PONTUAÇÃO SINGLE-CORE")
+                            Text("PONTUAÇÃO OBTIDA")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text(String(format: "%.0f pts", res.score))
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                            Text("\(res.score) pts")
+                                .font(.system(size: 38, weight: .heavy, design: .rounded))
                                 .foregroundColor(.cyan)
+                            Text("\(res.isMultiCore ? "Multi-Core" : "Single-Core") • \(String(format: "%.2f s", res.durationSeconds)) de teste")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("TAXA DE AMOSTRAS")
+                            Text("DENSIDADE DE CÁLCULO")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text(String(format: "%.1f M amostras/s", res.samplesPerSec / 1_000_000.0))
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("TEMPO TOTAL")
-                                .font(.caption2)
+                            Text(String(format: "%.1f Mraios/s", res.samplesPerSec / 1_000_000.0))
+                                .font(.title)
+                                .fontWeight(.bold)
+                            Text("Taxa determinística de traçado de raios")
+                                .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text(String(format: "%.2f s", res.durationSeconds))
-                                .font(.title3)
-                                .fontWeight(.semibold)
                         }
                     }
                 }
             }
             
-            // Tabela Comparativa de Processadores
+            // Tabela Comparativa de Mercado
             if !cpuLeaderboard.isEmpty {
                 CardView {
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("ESCALA COMPARATIVA DE PERFORMANCE")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(.secondary)
-                            Text("Como o seu processador se compara no mercado global")
-                                .font(.headline)
-                        }
-                        Spacer()
+                        Image(systemName: "chart.bar.xaxis")
+                            .foregroundColor(.cyan)
+                        Text("COMPARATIVO DE MERCADO • \(isMultiCore ? "MULTI-CORE" : "SINGLE-CORE")")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
                     }
-                    
-                    Divider()
-                    
-                    let maxScore = cpuLeaderboard.first?.score ?? 30000
                     
                     VStack(spacing: 8) {
                         ForEach(cpuLeaderboard) { item in
-                            HStack(spacing: 12) {
+                            HStack {
                                 Text(item.name)
-                                    .font(.caption)
+                                    .font(.subheadline)
                                     .fontWeight(item.isUser ? .bold : .regular)
                                     .foregroundColor(item.isUser ? .cyan : .primary)
-                                    .frame(width: 240, alignment: .leading)
+                                    .frame(width: 220, alignment: .leading)
                                 
                                 GeometryReader { geo in
-                                    ZStack(alignment: .leading) {
+                                    let maxScore = Double(cpuLeaderboard.first?.score ?? 1)
+                                    let width = geo.size.width * CGFloat(Double(item.score) / max(1.0, maxScore))
+                                    
+                                    HStack {
                                         RoundedRectangle(cornerRadius: 3)
-                                            .fill(Color.white.opacity(0.06))
-                                            .frame(height: 12)
-                                        
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(item.isUser ? Color.cyan : (item.arch == "ARM64" ? Color.blue.opacity(0.7) : Color.gray.opacity(0.7)))
-                                            .frame(width: max(10, geo.size.width * CGFloat(item.score / maxScore)), height: 12)
+                                            .fill(item.isUser ? Color.cyan : Color.white.opacity(0.18))
+                                            .frame(width: max(10, width), height: 14)
+                                        Spacer()
                                     }
                                 }
-                                .frame(height: 12)
+                                .frame(height: 14)
                                 
-                                Text(String(format: "%.0f pts", item.score))
-                                    .font(.caption)
+                                Text("\(Int(item.score)) pts")
+                                    .font(.subheadline)
                                     .fontWeight(item.isUser ? .bold : .medium)
                                     .foregroundColor(item.isUser ? .cyan : .secondary)
-                                    .frame(width: 70, alignment: .trailing)
+                                    .frame(width: 80, alignment: .trailing)
                             }
-                            .padding(.vertical, 2)
+                            .padding(.vertical, 3)
                         }
                     }
                 }
@@ -256,9 +271,9 @@ public struct BenchmarkView: View {
                             .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.secondary)
-                        Text("Largura de Banda & Latência da Memória Unificada")
+                        Text("Largura de Banda e Latência da Memória Unificada")
                             .font(.headline)
-                        Text("Mede a velocidade real de vazão de dados entre os núcleos do Apple Silicon e a RAM unificada de \(String(format: "%.0f GB", ramInfo.totalGB)).")
+                        Text("Mede a vazão sustentada da arquitetura Apple Silicon em GB/s e latência em nanossegundos.")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -269,15 +284,15 @@ public struct BenchmarkView: View {
                             if isRunningMemory {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Image(systemName: "bolt.horizontal.fill")
+                                Image(systemName: "memorychip")
                             }
-                            Text(isRunningMemory ? "Testando..." : "Testar Memória")
+                            Text(isRunningMemory ? "Medindo..." : "Testar Memória")
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                    .tint(.purple)
                     .disabled(isRunningMemory)
                 }
                 
@@ -287,183 +302,156 @@ public struct BenchmarkView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         ProgressView(value: memProgress, total: 1.0)
-                            .accentColor(.green)
+                            .accentColor(.purple)
                     }
                 }
                 
                 if let res = memResult {
                     Divider()
-                    HStack(spacing: 40) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("LARGURA DE BANDA REAL")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text(String(format: "%.1f GB/s", res.bandwidthGBs))
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
-                                .foregroundColor(.green)
-                        }
+                    
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        MetricBox(
+                            title: "LARGURA DE BANDA SUSTENTADA",
+                            value: String(format: "%.1f GB/s", res.bandwidthGBs),
+                            subtitle: "Transferência contínua na memória unificada",
+                            icon: "speedometer",
+                            color: .purple
+                        )
                         
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("LATÊNCIA MÉDIA DE ACESSO")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text(String(format: "%.1f ns", res.latencyNs))
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.cyan)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("DURAÇÃO DO TESTE")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text(String(format: "%.2f s", res.durationSeconds))
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                        }
+                        MetricBox(
+                            title: "LATÊNCIA DE ACESSO",
+                            value: String(format: "%.1f ns", res.latencyNs),
+                            subtitle: "Tempo de acesso direto (Pointer Chasing)",
+                            icon: "clock.arrow.2.circlepath",
+                            color: .cyan
+                        )
                     }
-                }
-            }
-            
-            // Comparativo de Memória
-            CardView {
-                Text("REFERÊNCIA DE LARGURA DE BANDA DE MEMÓRIA")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                
-                VStack(spacing: 10) {
-                    MemoryBarRow(name: "PC DDR4-3200 Dual-Channel", speedGBs: 45.0, maxSpeed: 200.0, color: .gray)
-                    MemoryBarRow(name: "PC DDR5-6000 Dual-Channel", speedGBs: 75.0, maxSpeed: 200.0, color: .gray)
-                    MemoryBarRow(name: "Apple M1 / M2 / M3 Base", speedGBs: 100.0, maxSpeed: 200.0, color: .blue)
-                    if let res = memResult {
-                        MemoryBarRow(name: "Seu Mac (Apple Silicon Testado)", speedGBs: res.bandwidthGBs, maxSpeed: 200.0, color: .green, isUser: true)
-                    } else {
-                        MemoryBarRow(name: "Seu Mac (Taxa Estimada)", speedGBs: 120.0, maxSpeed: 200.0, color: .cyan, isUser: true)
-                    }
-                    MemoryBarRow(name: "Apple M4 Pro", speedGBs: 150.0, maxSpeed: 200.0, color: .blue)
                 }
             }
         }
     }
     
-    // MARK: - Disk Benchmark Section
+    // MARK: - Disk Benchmark Section (Alinhado & Refinado)
     private var diskBenchmarkSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             CardView {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("BENCHMARK DE ARMAZENAMENTO COMPLETO (CRYSTAL DISK STYLE)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.secondary)
-                        Text("Velocidade Sequencial & IOPS Aleatórios 4K")
-                            .font(.headline)
-                        Text("Mede a taxa de transferência física contornando o cache de memória do macOS (F_NOCACHE).")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    
-                    Button(action: runDiskBenchmark) {
-                        HStack {
-                            if isRunningDisk {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Image(systemName: "bolt.fill")
-                            }
-                            Text(isRunningDisk ? "Testando..." : "Testar Volume Selecionado")
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("BENCHMARK DE ARMAZENAMENTO COMPLETO (CRYSTAL DISK STYLE)")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.secondary)
+                            Text("Velocidade Sequencial & IOPS Aleatórios 4K")
+                                .font(.headline)
+                            Text("Mede a taxa de transferência física contornando o cache de memória do macOS (F_NOCACHE).")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-                    .disabled(isRunningDisk)
-                }
-                
-                // Seletor de Discos
-                HStack(spacing: 16) {
-                    Image(systemName: selectedVolume.isInternal ? "internaldrive.fill" : "externaldrive.fill")
-                        .font(.title2)
-                        .foregroundColor(.green)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Selecione o Disco para Testar:")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Spacer()
                         
-                        Picker("", selection: $selectedVolumePath) {
-                            ForEach(volumes) { vol in
-                                Text("\(vol.name) (\(String(format: "%.0f GB", vol.totalGB))) [\(vol.isInternal ? "Interno" : "Externo")]")
-                                    .tag(vol.path)
+                        Button(action: runDiskBenchmark) {
+                            HStack {
+                                if isRunningDisk {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Image(systemName: "bolt.fill")
+                                }
+                                Text(isRunningDisk ? "Testando..." : "Testar Volume Selecionado")
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
                         }
-                        .pickerStyle(.menu)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
                         .disabled(isRunningDisk)
                     }
                     
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Capacidade Livre:")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text(String(format: "%.1f GB livres", selectedVolume.freeGB))
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
-                    }
-                }
-                .padding(10)
-                .background(Color.white.opacity(0.04))
-                .cornerRadius(8)
-                
-                if isRunningDisk {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(diskProgressText)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        ProgressView(value: diskProgress, total: 1.0)
-                            .accentColor(.green)
-                    }
-                }
-                
-                if let res = diskResult {
                     Divider()
                     
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        MetricBox(
-                            title: "LEITURA SEQUENCIAL",
-                            value: String(format: "%.0f MB/s", res.seqReadMBs),
-                            subtitle: "Blocos de 1 MB",
-                            icon: "arrow.down.doc.fill",
-                            color: .green
-                        )
+                    // Seletor de Discos Espaçoso e Alinhado
+                    HStack(spacing: 16) {
+                        Image(systemName: selectedVolume.isInternal ? "internaldrive.fill" : "externaldrive.fill")
+                            .font(.title2)
+                            .foregroundColor(.green)
                         
-                        MetricBox(
-                            title: "ESCRITA SEQUENCIAL",
-                            value: String(format: "%.0f MB/s", res.seqWriteMBs),
-                            subtitle: "Blocos de 1 MB",
-                            icon: "arrow.up.doc.fill",
-                            color: .cyan
-                        )
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Disco Selecionado para Teste:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            
+                            Picker("", selection: $selectedVolumePath) {
+                                ForEach(volumes) { vol in
+                                    Text("\(vol.name) (\(String(format: "%.0f GB", vol.totalGB))) [\(vol.isInternal ? "Interno" : "Externo")]")
+                                        .tag(vol.path)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .disabled(isRunningDisk)
+                        }
                         
-                        MetricBox(
-                            title: "LEITURA ALEATÓRIA 4K",
-                            value: String(format: "%.0f IOPS", res.random4kReadIOPS),
-                            subtitle: "Acesso aleatório 4 KB",
-                            icon: "square.grid.3x3.fill",
-                            color: .yellow
-                        )
+                        Spacer()
                         
-                        MetricBox(
-                            title: "ESCRITA ALEATÓRIA 4K",
-                            value: String(format: "%.0f IOPS", res.random4kWriteIOPS),
-                            subtitle: "Acesso aleatório 4 KB",
-                            icon: "square.grid.3x3.topleft.filled",
-                            color: .orange
-                        )
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("Espaço Livre:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text(String(format: "%.1f GB livres", selectedVolume.freeGB))
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.green)
+                        }
+                    }
+                    .padding(10)
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(8)
+                    
+                    if isRunningDisk {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(diskProgressText)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            ProgressView(value: diskProgress, total: 1.0)
+                                .accentColor(.green)
+                        }
+                    }
+                    
+                    if let res = diskResult {
+                        Divider()
+                        
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+                            MetricBox(
+                                title: "LEITURA SEQUENCIAL",
+                                value: String(format: "%.0f MB/s", res.seqReadMBs),
+                                subtitle: "Blocos de 1 MB físicos",
+                                icon: "arrow.down.doc.fill",
+                                color: .green
+                            )
+                            
+                            MetricBox(
+                                title: "ESCRITA SEQUENCIAL",
+                                value: String(format: "%.0f MB/s", res.seqWriteMBs),
+                                subtitle: "Blocos de 1 MB físicos",
+                                icon: "arrow.up.doc.fill",
+                                color: .cyan
+                            )
+                            
+                            MetricBox(
+                                title: "LEITURA ALEATÓRIA 4K",
+                                value: String(format: "%.0f IOPS", res.random4kReadIOPS),
+                                subtitle: "Acesso aleatório 4 KB",
+                                icon: "square.grid.3x3.fill",
+                                color: .yellow
+                            )
+                            
+                            MetricBox(
+                                title: "ESCRITA ALEATÓRIA 4K",
+                                value: String(format: "%.0f IOPS", res.random4kWriteIOPS),
+                                subtitle: "Acesso aleatório 4 KB",
+                                icon: "square.grid.3x3.topleft.filled",
+                                color: .orange
+                            )
+                        }
                     }
                 }
             }
@@ -498,10 +486,10 @@ public struct BenchmarkView: View {
         memStatusText = "Iniciando teste de largura de banda..."
         
         Task {
-            let res = await MemoryBenchService.shared.runMemoryBenchmark { pct, status in
+            let res = await MemoryBenchService.shared.runMemoryBenchmark { progress, text in
                 DispatchQueue.main.async {
-                    self.memProgress = pct
-                    self.memStatusText = status
+                    self.memProgress = progress
+                    self.memStatusText = text
                 }
             }
             await MainActor.run {
@@ -514,13 +502,12 @@ public struct BenchmarkView: View {
     private func runDiskBenchmark() {
         isRunningDisk = true
         diskProgress = 0.0
-        diskProgressText = "Iniciando teste no volume..."
-        let targetVolume = selectedVolume
+        diskProgressText = "Preparando teste no volume \(selectedVolume.name)..."
         
         Task {
-            let res = await DiskVolumeService.shared.runBenchmark(on: targetVolume, sizeMB: 128) { status, pct in
+            let res = await DiskVolumeService.shared.runBenchmark(on: selectedVolume) { phase, pct in
                 DispatchQueue.main.async {
-                    self.diskProgressText = status
+                    self.diskProgressText = phase
                     self.diskProgress = pct
                 }
             }
@@ -528,43 +515,6 @@ public struct BenchmarkView: View {
                 self.diskResult = res
                 self.isRunningDisk = false
             }
-        }
-    }
-}
-
-private struct MemoryBarRow: View {
-    let name: String
-    let speedGBs: Double
-    let maxSpeed: Double
-    let color: Color
-    var isUser: Bool = false
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Text(name)
-                .font(.caption)
-                .fontWeight(isUser ? .bold : .regular)
-                .foregroundColor(isUser ? .cyan : .primary)
-                .frame(width: 220, alignment: .leading)
-            
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.white.opacity(0.06))
-                        .frame(height: 12)
-                    
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(color)
-                        .frame(width: max(10, geo.size.width * CGFloat(min(1.0, speedGBs / maxSpeed))), height: 12)
-                }
-            }
-            .frame(height: 12)
-            
-            Text(String(format: "%.1f GB/s", speedGBs))
-                .font(.caption)
-                .fontWeight(isUser ? .bold : .medium)
-                .foregroundColor(isUser ? .green : .secondary)
-                .frame(width: 80, alignment: .trailing)
         }
     }
 }

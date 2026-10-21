@@ -10,6 +10,8 @@ public struct DashboardView: View {
     @State private var volumes = DiskVolumeService.shared.listMountedVolumes()
     @State private var connectedDevices = ConnectedDevicesService.shared.getSummary()
     @State private var topProcesses = HardwareService.shared.getTopProcesses(limit: 5)
+    @State private var thermal = ThermalService.shared.getThermalInfo()
+    @State private var monitorDisplays = DisplayBrightnessService.shared.getConnectedDisplays()
     @State private var brightness: Float = DisplayBrightnessService.shared.getBrightness()
     
     @State private var showStartupPrompt = !LaunchAtLoginService.shared.hasBeenPrompted
@@ -67,7 +69,7 @@ public struct DashboardView: View {
                 // Cabeçalho
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("RESET SISTEMA")
+                        Text("RESTATS SISTEMA & SENSORES")
                             .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.cyan)
@@ -493,7 +495,83 @@ public struct DashboardView: View {
                     }
                 }
                 
-                // Card de Ajuste de Brilho dos Monitores (DisplayServices)
+                // Card de Temperatura e Sensores Térmicos do Apple Silicon
+                CardView {
+                    HStack {
+                        Image(systemName: "thermometer.sun.fill")
+                            .foregroundColor(.orange)
+                            .font(.title2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("TEMPERATURA & ESTADO TÉRMICO DO APPLE SILICON")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.secondary)
+                            Text("Sensores de Hardware e Dissipação de Calor")
+                                .font(.headline)
+                        }
+                        
+                        Spacer()
+                        
+                        Text(String(format: "%.0f°C", thermal.socTemperatureC))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(thermal.socTemperatureC > 75 ? .red : (thermal.socTemperatureC > 55 ? .orange : .green))
+                    }
+                    
+                    Divider()
+                    
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "cpu")
+                                .foregroundColor(.orange)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Processador (SoC)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.1f °C", thermal.socTemperatureC))
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.white.opacity(0.03))
+                        .cornerRadius(6)
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "battery.100.bolt")
+                                .foregroundColor(.yellow)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Sensor Físico Bateria")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.1f °C", thermal.batteryTemperatureC))
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.white.opacity(0.03))
+                        .cornerRadius(6)
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "waveform.path.ecg")
+                                .foregroundColor(.green)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Estado Térmico")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(thermal.thermalStateDescription)
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .lineLimit(1)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.white.opacity(0.03))
+                        .cornerRadius(6)
+                    }
+                }
+                
+                // Card de Ajuste de Brilho dos Monitores (Multi-Monitor)
                 CardView {
                     HStack {
                         Image(systemName: "sun.max.fill")
@@ -501,45 +579,73 @@ public struct DashboardView: View {
                             .font(.title2)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("BRILHO DOS MONITORES")
+                            Text("BRILHO DOS MONITORES (\(monitorDisplays.count))")
                                 .font(.caption)
                                 .fontWeight(.bold)
                                 .foregroundColor(.secondary)
-                            Text("Ajuste em Tempo Real da Iluminação da Tela")
+                            Text("Controle Individual da Tela Integrada e Telas Externas")
                                 .font(.headline)
                         }
                         
                         Spacer()
-                        
-                        Text("\(Int(brightness * 100))%")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.yellow)
                     }
                     
                     Divider()
                     
-                    HStack(spacing: 16) {
-                        Image(systemName: "sun.min")
-                            .foregroundColor(.secondary)
-                        
-                        Slider(value: Binding(
-                            get: { Double(brightness) },
-                            set: { val in
-                                brightness = Float(val)
-                                _ = DisplayBrightnessService.shared.setBrightness(brightness)
+                    VStack(spacing: 12) {
+                        ForEach(monitorDisplays) { disp in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Image(systemName: disp.isMain ? "display" : "display.2")
+                                        .foregroundColor(.yellow)
+                                    Text(disp.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    if disp.isMain {
+                                        Text("Tela Principal")
+                                            .font(.system(size: 8, weight: .bold))
+                                            .padding(.horizontal, 4)
+                                            .padding(.vertical, 1)
+                                            .background(Color.yellow.opacity(0.2))
+                                            .foregroundColor(.yellow)
+                                            .cornerRadius(3)
+                                    }
+                                    Spacer()
+                                    Text("\(Int(disp.brightness * 100))%")
+                                        .font(.subheadline)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                HStack(spacing: 12) {
+                                    Image(systemName: "sun.min")
+                                        .foregroundColor(.secondary)
+                                    
+                                    Slider(value: Binding(
+                                        get: { Double(disp.brightness) },
+                                        set: { val in
+                                            if let idx = monitorDisplays.firstIndex(where: { $0.id == disp.id }) {
+                                                monitorDisplays[idx].brightness = Float(val)
+                                                _ = DisplayBrightnessService.shared.setBrightness(Float(val), displayID: disp.id)
+                                            }
+                                        }
+                                    ), in: 0.05...1.0)
+                                    .accentColor(.yellow)
+                                    
+                                    Image(systemName: "sun.max.fill")
+                                        .foregroundColor(.yellow)
+                                    
+                                    HStack(spacing: 4) {
+                                        Button("25%") { setDisplayBrightness(disp.id, 0.25) }.buttonStyle(.bordered).controlSize(.mini)
+                                        Button("50%") { setDisplayBrightness(disp.id, 0.50) }.buttonStyle(.bordered).controlSize(.mini)
+                                        Button("75%") { setDisplayBrightness(disp.id, 0.75) }.buttonStyle(.bordered).controlSize(.mini)
+                                        Button("100%") { setDisplayBrightness(disp.id, 1.00) }.buttonStyle(.bordered).controlSize(.mini)
+                                    }
+                                }
                             }
-                        ), in: 0.05...1.0)
-                        .accentColor(.yellow)
-                        
-                        Image(systemName: "sun.max.fill")
-                            .foregroundColor(.yellow)
-                        
-                        HStack(spacing: 6) {
-                            Button("25%") { setBrightness(0.25) }.buttonStyle(.bordered).controlSize(.small)
-                            Button("50%") { setBrightness(0.50) }.buttonStyle(.bordered).controlSize(.small)
-                            Button("75%") { setBrightness(0.75) }.buttonStyle(.bordered).controlSize(.small)
-                            Button("100%") { setBrightness(1.00) }.buttonStyle(.bordered).controlSize(.small)
+                            .padding(8)
+                            .background(Color.white.opacity(0.02))
+                            .cornerRadius(6)
                         }
                     }
                 }
@@ -594,9 +700,12 @@ public struct DashboardView: View {
             battery = HardwareService.shared.getBatteryInfo()
             volumes = DiskVolumeService.shared.listMountedVolumes()
             topProcesses = HardwareService.shared.getTopProcesses(limit: 5)
+            thermal = ThermalService.shared.getThermalInfo()
+            monitorDisplays = DisplayBrightnessService.shared.getConnectedDisplays()
         }
         .onAppear {
             refreshDevices()
+            monitorDisplays = DisplayBrightnessService.shared.getConnectedDisplays()
         }
     }
     
@@ -617,9 +726,11 @@ public struct DashboardView: View {
         }
     }
     
-    private func setBrightness(_ val: Float) {
-        self.brightness = val
-        _ = DisplayBrightnessService.shared.setBrightness(val)
+    private func setDisplayBrightness(_ id: CGDirectDisplayID, _ val: Float) {
+        if let idx = monitorDisplays.firstIndex(where: { $0.id == id }) {
+            monitorDisplays[idx].brightness = val
+            _ = DisplayBrightnessService.shared.setBrightness(val, displayID: id)
+        }
     }
     
     private func iconForUSB(name: String) -> String {

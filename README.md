@@ -130,12 +130,6 @@ A instalação no macOS é instantânea:
 
 ---
 
-### 6. 🔌 ReStats Maker (Arduino / ESP32 / Eletrônica)
-* **Scanner de Portas Seriais:** Mapeia portas `/dev/cu.*` em tempo real.
-* **Identificação Automática:** Reconhece placas **Arduino (Uno, Mega, Nano), ESP32, ESP8266, Raspberry Pi Pico** e conversores USB-UART baseados nos chips **CH340/CH341, CP2102/CP2104 e FTDI**.
-
----
-
 ## 📊 Tabela de Referência de Benchmarks de CPU
 
 | Processador | Arquitetura | Single-Core (pts) | Multi-Core (pts) | Vazão de Memória |

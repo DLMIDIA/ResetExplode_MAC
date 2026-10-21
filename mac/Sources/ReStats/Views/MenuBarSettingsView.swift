@@ -5,9 +5,13 @@ public struct MenuBarSettingsView: View {
     @State private var showCpu = MenuBarSettingsService.shared.showCpu
     @State private var showRam = MenuBarSettingsService.shared.showRam
     @State private var showNet = MenuBarSettingsService.shared.showNet
+    @State private var showTemp = MenuBarSettingsService.shared.showTemp
     @State private var showBattery = MenuBarSettingsService.shared.showBattery
+    @State private var showDisk = MenuBarSettingsService.shared.showDisk
     
-    @State private var brightness: Float = DisplayBrightnessService.shared.getBrightness()
+    @State private var monitoredPaths = MenuBarSettingsService.shared.monitoredDiskPaths
+    @State private var volumes = DiskVolumeService.shared.listMountedVolumes()
+    @State private var displays = DisplayBrightnessService.shared.getConnectedDisplays()
     @State private var launchAtLogin = LaunchAtLoginService.shared.isEnabled
     
     public init() {}
@@ -17,7 +21,9 @@ public struct MenuBarSettingsView: View {
             cpu: 18.0,
             ram: 54.0,
             downloadKBps: 1450.0,
-            batteryPct: 100
+            batteryPct: 98,
+            socTemp: 38.0,
+            volumes: volumes
         )
     }
     
@@ -77,6 +83,7 @@ public struct MenuBarSettingsView: View {
                     Divider()
                     
                     VStack(spacing: 12) {
+                        // Ícone
                         Toggle(isOn: $showIcon) {
                             HStack {
                                 Image(systemName: "bolt.shield.fill")
@@ -99,6 +106,7 @@ public struct MenuBarSettingsView: View {
                         
                         Divider()
                         
+                        // CPU
                         Toggle(isOn: $showCpu) {
                             HStack {
                                 Image(systemName: "cpu")
@@ -121,6 +129,7 @@ public struct MenuBarSettingsView: View {
                         
                         Divider()
                         
+                        // RAM
                         Toggle(isOn: $showRam) {
                             HStack {
                                 Image(systemName: "memorychip")
@@ -143,6 +152,7 @@ public struct MenuBarSettingsView: View {
                         
                         Divider()
                         
+                        // Rede
                         Toggle(isOn: $showNet) {
                             HStack {
                                 Image(systemName: "arrow.down.circle")
@@ -165,6 +175,30 @@ public struct MenuBarSettingsView: View {
                         
                         Divider()
                         
+                        // Temperatura
+                        Toggle(isOn: $showTemp) {
+                            HStack {
+                                Image(systemName: "thermometer.medium")
+                                    .foregroundColor(.orange)
+                                    .frame(width: 24)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Temperatura do Processador / SoC")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("Exibe a temperatura em graus Celsius (ex: 38°C)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .onChange(of: showTemp) { val in
+                            MenuBarSettingsService.shared.showTemp = val
+                            AppDelegate.shared?.refreshStatusBarNow()
+                        }
+                        
+                        Divider()
+                        
+                        // Bateria
                         Toggle(isOn: $showBattery) {
                             HStack {
                                 Image(systemName: "battery.100.bolt")
@@ -174,7 +208,7 @@ public struct MenuBarSettingsView: View {
                                     Text("Nível da Bateria")
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
-                                    Text("Exibe a porcentagem da bateria (ex: 🔋100%)")
+                                    Text("Exibe a porcentagem e ícone da bateria (ex: 🔋100%)")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
@@ -184,10 +218,83 @@ public struct MenuBarSettingsView: View {
                             MenuBarSettingsService.shared.showBattery = val
                             AppDelegate.shared?.refreshStatusBarNow()
                         }
+                        
+                        Divider()
+                        
+                        // Discos e Armazenamento
+                        Toggle(isOn: $showDisk) {
+                            HStack {
+                                Image(systemName: "internaldrive.fill")
+                                    .foregroundColor(.cyan)
+                                    .frame(width: 24)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Espaço Livre de Armazenamento")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("Exibe a quantidade de GB livres dos discos selecionados abaixo")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .onChange(of: showDisk) { val in
+                            MenuBarSettingsService.shared.showDisk = val
+                            AppDelegate.shared?.refreshStatusBarNow()
+                        }
                     }
                 }
                 
-                // Controle de Brilho dos Monitores
+                // SELEÇÃO DE DISCOS INDIVIDUAIS PARA MONITORAR
+                if showDisk {
+                    CardView {
+                        Text("ESCOLHA QUAIS DISCOS EXIBIR NA BARRA DE MENUS")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.cyan)
+                        
+                        Text("Você pode marcar 1, 2, 3 ou todos os discos conectados:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        Divider()
+                        
+                        VStack(spacing: 8) {
+                            ForEach(volumes) { vol in
+                                HStack {
+                                    Image(systemName: vol.isInternal ? "internaldrive" : "externaldrive.fill")
+                                        .foregroundColor(vol.isInternal ? .cyan : .green)
+                                        .frame(width: 20)
+                                    
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(vol.name)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                        Text("\(String(format: "%.1f GB livres", vol.freeGB)) de \(String(format: "%.0f GB", vol.totalGB)) (\(vol.isInternal ? "Interno" : "Externo"))")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: Binding(
+                                        get: { monitoredPaths.contains(vol.path) },
+                                        set: { isChecked in
+                                            MenuBarSettingsService.shared.toggleDiskMonitoring(path: vol.path)
+                                            monitoredPaths = MenuBarSettingsService.shared.monitoredDiskPaths
+                                            AppDelegate.shared?.refreshStatusBarNow()
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                }
+                                .padding(6)
+                                .background(Color.white.opacity(0.02))
+                                .cornerRadius(6)
+                            }
+                        }
+                    }
+                }
+                
+                // CONTROLE DE BRILHO MULTI-MONITOR
                 CardView {
                     HStack {
                         Image(systemName: "sun.max.fill")
@@ -195,45 +302,71 @@ public struct MenuBarSettingsView: View {
                             .font(.title2)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("AJUSTE DE BRILHO DOS MONITORES")
+                            Text("AJUSTE DE BRILHO DOS MONITORES (\(displays.count))")
                                 .font(.caption)
                                 .fontWeight(.bold)
                                 .foregroundColor(.secondary)
-                            Text("Controle Físico da Luz de Fundo da Tela")
+                            Text("Controle Individual de Telas Integradas e Externas")
                                 .font(.headline)
                         }
                         
                         Spacer()
-                        
-                        Text("\(Int(brightness * 100))%")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.yellow)
                     }
                     
                     Divider()
                     
-                    HStack(spacing: 16) {
-                        Image(systemName: "sun.min")
-                            .foregroundColor(.secondary)
-                        
-                        Slider(value: Binding(
-                            get: { Double(brightness) },
-                            set: { val in
-                                brightness = Float(val)
-                                _ = DisplayBrightnessService.shared.setBrightness(brightness)
+                    VStack(spacing: 14) {
+                        ForEach(displays) { disp in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(disp.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    if disp.isMain {
+                                        Text("Principal")
+                                            .font(.system(size: 8, weight: .bold))
+                                            .padding(.horizontal, 4)
+                                            .padding(.vertical, 1)
+                                            .background(Color.yellow.opacity(0.2))
+                                            .foregroundColor(.yellow)
+                                            .cornerRadius(3)
+                                    }
+                                    Spacer()
+                                    Text("\(Int(disp.brightness * 100))%")
+                                        .font(.subheadline)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                HStack(spacing: 12) {
+                                    Image(systemName: "sun.min")
+                                        .foregroundColor(.secondary)
+                                    
+                                    Slider(value: Binding(
+                                        get: { Double(disp.brightness) },
+                                        set: { val in
+                                            if let idx = displays.firstIndex(where: { $0.id == disp.id }) {
+                                                displays[idx].brightness = Float(val)
+                                                _ = DisplayBrightnessService.shared.setBrightness(Float(val), displayID: disp.id)
+                                            }
+                                        }
+                                    ), in: 0.05...1.0)
+                                    .accentColor(.yellow)
+                                    
+                                    Image(systemName: "sun.max.fill")
+                                        .foregroundColor(.yellow)
+                                    
+                                    HStack(spacing: 4) {
+                                        Button("25%") { setDisplayBrightness(disp.id, 0.25) }.buttonStyle(.bordered).controlSize(.mini)
+                                        Button("50%") { setDisplayBrightness(disp.id, 0.50) }.buttonStyle(.bordered).controlSize(.mini)
+                                        Button("75%") { setDisplayBrightness(disp.id, 0.75) }.buttonStyle(.bordered).controlSize(.mini)
+                                        Button("100%") { setDisplayBrightness(disp.id, 1.00) }.buttonStyle(.bordered).controlSize(.mini)
+                                    }
+                                }
                             }
-                        ), in: 0.05...1.0)
-                        .accentColor(.yellow)
-                        
-                        Image(systemName: "sun.max.fill")
-                            .foregroundColor(.yellow)
-                        
-                        HStack(spacing: 6) {
-                            Button("25%") { setBrightness(0.25) }.buttonStyle(.bordered).controlSize(.small)
-                            Button("50%") { setBrightness(0.50) }.buttonStyle(.bordered).controlSize(.small)
-                            Button("75%") { setBrightness(0.75) }.buttonStyle(.bordered).controlSize(.small)
-                            Button("100%") { setBrightness(1.00) }.buttonStyle(.bordered).controlSize(.small)
+                            .padding(8)
+                            .background(Color.white.opacity(0.02))
+                            .cornerRadius(6)
                         }
                     }
                 }
@@ -266,8 +399,10 @@ public struct MenuBarSettingsView: View {
         }
     }
     
-    private func setBrightness(_ val: Float) {
-        self.brightness = val
-        _ = DisplayBrightnessService.shared.setBrightness(val)
+    private func setDisplayBrightness(_ id: CGDirectDisplayID, _ val: Float) {
+        if let idx = displays.firstIndex(where: { $0.id == id }) {
+            displays[idx].brightness = val
+            _ = DisplayBrightnessService.shared.setBrightness(val, displayID: id)
+        }
     }
 }

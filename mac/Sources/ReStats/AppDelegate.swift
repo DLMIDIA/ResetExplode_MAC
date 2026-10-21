@@ -94,6 +94,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let ram = HardwareService.shared.getRAMInfo()
         let net = NetworkService.shared.getCurrentStats()
         let battery = HardwareService.shared.getBatteryInfo()
+        let thermal = ThermalService.shared.getThermalInfo()
+        let volumes = DiskVolumeService.shared.listMountedVolumes()
         
         guard let button = self.statusItem?.button else { return }
         
@@ -108,7 +110,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             cpu: cpu.overallUsage,
             ram: ram.usagePercent,
             downloadKBps: net.downloadSpeedKBps,
-            batteryPct: battery.percentage
+            batteryPct: battery.percentage,
+            socTemp: thermal.socTemperatureC,
+            volumes: volumes
         )
     }
 }
