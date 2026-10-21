@@ -154,7 +154,18 @@ A instalação no macOS é instantânea:
 
 ---
 
-### 5. 🚀 ReStats Otimiza (RAM, Caches & Limpeza)
+### 5. 🚀 ReStats Otimiza (RAM, Caches & Organizador)
+* **Organizador Inteligente de Mesa (Desktop) & Downloads:**
+  * Integração nativa do algoritmo de organização automática em **7 categorias estruturadas**:
+    1. `01 - Projetos & Sistemas` (repositórios git, código, Node, Python, Docker)
+    2. `02 - Orçamentos & Contratos` (propostas comerciais, contratos, orçamentos, minutas)
+    3. `03 - Fotos, Vídeos & Drone` (vídeos brutos, mídias soltas, fotos de drones DJI e câmeras)
+    4. `04 - Design & Artes` (editáveis PSD, AI, Figma, SVG e peças gráficas finalizadas)
+    5. `05 - Documentos & PDFs` (PDFs, planilhas Excel, Word, apresentações e textos)
+    6. `06 - Capturas e Gravações de Tela` (prints de tela e vídeos de gravação)
+    7. `07 - Backups & Arquivos` (arquivos .zip, .dmg, .pkg, instaladores e compactados)
+  * Botões de ação rápida para organizar apenas a **Mesa**, apenas a pasta **Downloads** ou **Ambos com 1 Clique**.
+  * Acesso instantâneo tanto no painel principal quanto no **Popover da Barra de Menus**.
 * **Liberação de Memória Inativa:** Esvazia buffers inativos da RAM unificada sem fechar nenhum aplicativo em execução.
 * **Limpeza Segura de Caches e Logs:** Remove arquivos temporários de `~/Library/Caches` e `~/Library/Logs`, liberando múltiplos gigabytes de armazenamento.
 * **Inicialização com o Mac:** Integração com o subsistema nativo `SMAppService` da Apple.
@@ -228,7 +239,7 @@ O **ReStats** é um projeto de código aberto que homenageia e se apoia no traba
 | **GustavoReset** (*ResetExplode*) | Conceito original para Windows, suíte de benchmarks, testes de estresse e ecossistema Maker. | [GitHub](https://github.com/GustavoReset/ResetExplode) | MIT |
 | **Serhiy Mytrovtsiy** (*Stats*) | Referência máxima de telemetria macOS, arquitetura de chamadas Mach Kernel e design de Menu Bar. | [GitHub](https://github.com/exelban/stats) | MIT |
 | **Vorssaint** (*Vorssaint-Utils*) | Inspiração em utilitários de produtividade macOS, automação de foco Pomodoro e ferramentas de desenvolvedor. | [GitHub](https://github.com/vorssaint/vorssaint-utils) | MIT |
-| **DL MIDIA** (*ReStats*) | Fusão arquitetural, desenvolvimento nativo em Swift 6, engenharia para Apple Silicon M-Series e distribuição. | [GitHub](https://github.com/DLMIDIA/ResetExplode_MAC) | MIT |
+| **Daniel Júnior Barbosa da Silva** (*DL MIDIA*) | Idealização e fusão arquitetural no ReStats, desenvolvimento nativo em Swift 6, engenharia para Apple Silicon M-Series, controle avançado de hardware DDC/CI e distribuição. | [GitHub](https://github.com/DLMIDIA/ResetExplode_MAC) | MIT |
 
 ---
 

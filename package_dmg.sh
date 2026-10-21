@@ -51,6 +51,8 @@ cat <<EOF > "$APP_PATH/Contents/Info.plist"
     <string>ReStats</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 Daniel Júnior Barbosa da Silva (DL MIDIA). Licença MIT.</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSHighResolutionCapable</key>

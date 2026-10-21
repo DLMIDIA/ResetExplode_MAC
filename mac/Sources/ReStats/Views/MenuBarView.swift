@@ -13,6 +13,7 @@ public struct MenuBarView: View {
     @State private var isDisksExpanded = true
     
     @State private var isCleaning = false
+    @State private var isOrganizing = false
     @State private var cleanMessage: String?
     @State private var launchAtLogin = LaunchAtLoginService.shared.isEnabled
     
@@ -286,31 +287,46 @@ public struct MenuBarView: View {
     }
     
     private var actionsSection: some View {
-        HStack(spacing: 8) {
-            Button {
-                cleanRAM()
-            } label: {
-                HStack(spacing: 4) {
-                    if isCleaning { ProgressView().controlSize(.small) } else { Image(systemName: "sparkles") }
-                    Text("Limpar RAM")
+        VStack(spacing: 6) {
+            HStack(spacing: 8) {
+                Button {
+                    cleanRAM()
+                } label: {
+                    HStack(spacing: 4) {
+                        if isCleaning { ProgressView().controlSize(.small) } else { Image(systemName: "sparkles") }
+                        Text("Limpar RAM")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(isCleaning)
+                
+                Button {
+                    flushDNS()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "network")
+                        Text("Flush DNS")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .disabled(isCleaning)
             
             Button {
-                flushDNS()
+                organizeWorkspace()
             } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "network")
-                    Text("Flush DNS")
+                    if isOrganizing { ProgressView().controlSize(.small) } else { Image(systemName: "folder.badge.gearshape") }
+                    Text(isOrganizing ? "Organizando..." : "Organizar Mesa & Downloads")
                 }
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .disabled(isOrganizing)
         }
     }
     
@@ -340,6 +356,22 @@ public struct MenuBarView: View {
         case .normal: return .green
         case .warning: return .yellow
         case .critical: return .red
+        }
+    }
+    
+    private func organizeWorkspace() {
+        isOrganizing = true
+        cleanMessage = "Organizando Mesa e Downloads..."
+        Task {
+            WorkspaceOrganizerService.shared.organizeBoth()
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            await MainActor.run {
+                self.isOrganizing = false
+                self.cleanMessage = WorkspaceOrganizerService.shared.lastResult
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                    self.cleanMessage = nil
+                }
+            }
         }
     }
     

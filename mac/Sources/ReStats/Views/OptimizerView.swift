@@ -20,6 +20,9 @@ public struct OptimizerView: View {
     // Launch at login
     @State private var launchAtLogin = (SMAppService.mainApp.status == .enabled)
     
+    // Organizer Service
+    @StateObject private var organizer = WorkspaceOrganizerService.shared
+    
     public init() {}
     
     public var body: some View {
@@ -129,7 +132,118 @@ public struct OptimizerView: View {
                     }
                 }
                 
-                // 3. Inicialização com o Mac
+                // 3. Organizador de Mesa (Desktop) & Downloads
+                CardView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(LinearGradient(colors: [.indigo, .blue], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "folder.badge.gearshape")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text("ORGANIZADOR DE MESA & DOWNLOADS")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.secondary)
+                                    Text("7 Categorias")
+                                        .font(.system(size: 8, weight: .bold))
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 2)
+                                        .background(Color.blue.opacity(0.15))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(4)
+                                }
+                                Text("Classifica automaticamente arquivos soltos em Projetos, Contratos, Mídias, Design, Documentos e Backups.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: { organizer.organizeBoth() }) {
+                                HStack(spacing: 4) {
+                                    if organizer.isOrganizing {
+                                        ProgressView().controlSize(.small)
+                                    } else {
+                                        Image(systemName: "sparkles")
+                                    }
+                                    Text(organizer.isOrganizing ? "Organizando..." : "Organizar Tudo (1 Clique)")
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 7)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.blue)
+                            .disabled(organizer.isOrganizing)
+                        }
+                        
+                        Divider()
+                        
+                        HStack(spacing: 20) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "menubar.dock.rectangle")
+                                    .foregroundColor(.cyan)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Mesa (Desktop)")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("\(organizer.unorganizedDesktopCount) itens soltos")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Button("Organizar Mesa") {
+                                    organizer.organizeDesktop()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(organizer.isOrganizing)
+                            }
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.down.circle")
+                                    .foregroundColor(.green)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Downloads")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("\(organizer.unorganizedDownloadsCount) itens soltos")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Button("Organizar Downloads") {
+                                    organizer.organizeDownloads()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(organizer.isOrganizing)
+                            }
+                        }
+                        
+                        if !organizer.lastResult.isEmpty {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text(organizer.lastResult)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                            }
+                            .padding(.top, 2)
+                        }
+                    }
+                }
+                
+                // 4. Inicialização com o Mac
                 CardView {
                     HStack {
                         Image(systemName: "power.circle.fill")

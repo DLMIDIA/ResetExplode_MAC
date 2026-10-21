@@ -100,7 +100,7 @@ public struct MainView: View {
                     
                     Spacer()
                     
-                    Text("DL MIDIA")
+                    Text("Daniel Júnior • DL MIDIA")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.secondary.opacity(0.7))
                 }

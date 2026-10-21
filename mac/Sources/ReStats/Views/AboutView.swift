@@ -200,16 +200,24 @@ public struct AboutView: View {
                         .background(Color(NSColor.controlBackgroundColor))
                         .cornerRadius(10)
                         
-                        // DL MIDIA
+                        // Daniel Júnior Barbosa da Silva (DL MIDIA)
                         VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "apple.logo")
+                            HStack(spacing: 8) {
+                                Image(systemName: "person.crop.circle.badge.checkmark")
                                     .foregroundColor(.cyan)
-                                Text("DL MIDIA")
-                                    .font(.headline)
-                                    .fontWeight(.bold)
+                                    .font(.title2)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Daniel Júnior Barbosa da Silva")
+                                        .font(.headline)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                    Text("DL MIDIA")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.cyan)
+                                }
                             }
-                            Text("Fusão dos conceitos no **ReStats**, desenvolvimento nativo em Swift 6, engenharia para Apple Silicon M-Series e distribuição do instalador macOS.")
+                            Text("Idealização da fusão dos conceitos no **ReStats**, desenvolvimento nativo em Swift 6, engenharia para Apple Silicon M-Series, controle avançado de hardware/monitores e ecossistema macOS.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)

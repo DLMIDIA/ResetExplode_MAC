@@ -738,7 +738,7 @@ public struct DashboardView: View {
     private func iconForUSB(name: String) -> String {
         let l = name.lowercased()
         if l.contains("cast") || l.contains("mic") { return "mic.fill" }
-        if l.contains("hub") { return "square.connected.to.line.below.edges" }
+        if l.contains("hub") { return "cable.connector" }
         if l.contains("hdd") || l.contains("disk") || l.contains("expansion") { return "externaldrive.fill" }
         if l.contains("lan") || l.contains("ethernet") { return "network" }
         return "cable.connector"
