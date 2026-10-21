@@ -19,15 +19,19 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ResetExplode")
-            button.imagePosition = .imageLeading
+            if MenuBarSettingsService.shared.showIcon {
+                button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ResetExplode")
+                button.imagePosition = .imageLeading
+            } else {
+                button.image = nil
+            }
             button.title = " --%"
             button.action = #selector(statusBarButtonClicked(_:))
             button.target = self
         }
         
         let pop = NSPopover()
-        pop.contentSize = NSSize(width: 320, height: 560)
+        pop.contentSize = NSSize(width: 320, height: 580)
         pop.behavior = .transient
         pop.contentViewController = NSHostingController(rootView: MenuBarView())
         self.popover = pop
@@ -72,6 +76,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    public func refreshStatusBarNow() {
+        updateStatusBarText()
+    }
+    
     private func startMonitoringTimer() {
         updateStatusBarText()
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
@@ -85,15 +93,22 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let cpu = HardwareService.shared.getCPUInfo()
         let ram = HardwareService.shared.getRAMInfo()
         let net = NetworkService.shared.getCurrentStats()
-        
-        let speedStr: String
-        if net.downloadSpeedKBps >= 1024.0 {
-            speedStr = String(format: "%.1fM", net.downloadSpeedKBps / 1024.0)
-        } else {
-            speedStr = String(format: "%.0fK", net.downloadSpeedKBps)
-        }
+        let battery = HardwareService.shared.getBatteryInfo()
         
         guard let button = self.statusItem?.button else { return }
-        button.title = String(format: " CPU %.0f%% | RAM %.0f%% | ↓%@", cpu.overallUsage, ram.usagePercent, speedStr)
+        
+        if MenuBarSettingsService.shared.showIcon {
+            button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ResetExplode")
+            button.imagePosition = .imageLeading
+        } else {
+            button.image = nil
+        }
+        
+        button.title = MenuBarSettingsService.shared.formattedStatusText(
+            cpu: cpu.overallUsage,
+            ram: ram.usagePercent,
+            downloadKBps: net.downloadSpeedKBps,
+            batteryPct: battery.percentage
+        )
     }
 }

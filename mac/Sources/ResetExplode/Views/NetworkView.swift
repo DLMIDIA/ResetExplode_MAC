@@ -8,6 +8,12 @@ public struct NetworkView: View {
     @State private var isFlushingDNS = false
     @State private var dnsStatusMessage: String? = nil
     
+    // Internet Speedtest States
+    @State private var isRunningSpeedTest = false
+    @State private var speedTestProgress = 0.0
+    @State private var currentDownloadMbps = 0.0
+    @State private var speedTestResult: SpeedTestResult? = nil
+    
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
     
     public init() {}
@@ -84,6 +90,98 @@ public struct NetworkView: View {
                             Image(systemName: "arrow.up.circle.fill")
                                 .font(.system(size: 40))
                                 .foregroundColor(.blue.opacity(0.8))
+                        }
+                    }
+                }
+                
+                // Teste de Velocidade de Internet (Speedtest)
+                CardView {
+                    HStack {
+                        Image(systemName: "gauge.with.needle.fill")
+                            .foregroundColor(.green)
+                            .font(.title2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("TESTE DE VELOCIDADE DE INTERNET (SPEEDTEST)")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.secondary)
+                            Text("Vazão Real de Download, Latência e Estabilidade CDN")
+                                .font(.headline)
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: runInternetSpeedTest) {
+                            HStack {
+                                if isRunningSpeedTest {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                }
+                                Text(isRunningSpeedTest ? "Testando..." : "Iniciar Speedtest")
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .disabled(isRunningSpeedTest)
+                    }
+                    
+                    if isRunningSpeedTest {
+                        Divider()
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(String(format: "%.1f Mbps", currentDownloadMbps))
+                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .foregroundColor(.green)
+                                Spacer()
+                                Text("\(Int(speedTestProgress * 100))%")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                            }
+                            ProgressView(value: speedTestProgress, total: 1.0)
+                                .accentColor(.green)
+                        }
+                    }
+                    
+                    if let res = speedTestResult {
+                        Divider()
+                        HStack(spacing: 40) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("VELOCIDADE REAL")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.1f Mbps", res.downloadMbps))
+                                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                                    .foregroundColor(.green)
+                                Text(String(format: "%.2f MB/s de vazão", res.downloadMBs))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("LATÊNCIA (PING)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.0f ms", res.pingMs))
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(res.pingMs < 40 ? .green : .yellow)
+                                Text("Cloudflare Edge")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("DURAÇÃO DO TESTE")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(String(format: "%.2f s", res.durationSeconds))
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                            }
                         }
                     }
                 }
@@ -283,6 +381,25 @@ public struct NetworkView: View {
                 self.pingCloudflare = cf
                 self.pingGoogle = gg
                 self.isPinging = false
+            }
+        }
+    }
+    
+    private func runInternetSpeedTest() {
+        isRunningSpeedTest = true
+        speedTestProgress = 0.0
+        currentDownloadMbps = 0.0
+        
+        Task {
+            let res = await InternetSpeedTestService.shared.runSpeedTest { mbps, progress in
+                DispatchQueue.main.async {
+                    self.currentDownloadMbps = mbps
+                    self.speedTestProgress = progress
+                }
+            }
+            await MainActor.run {
+                self.speedTestResult = res
+                self.isRunningSpeedTest = false
             }
         }
     }

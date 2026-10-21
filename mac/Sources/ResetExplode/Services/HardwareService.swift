@@ -122,7 +122,27 @@ public final class HardwareService: @unchecked Sendable {
         )
     }
     
+    private var cachedTopProcesses: [ProcessMetric] = []
+    private var lastProcessFetch: CFAbsoluteTime = 0
+    private let procLock = NSLock()
+    
     public func getTopProcesses(limit: Int = 5) -> [ProcessMetric] {
+        procLock.lock()
+        let now = CFAbsoluteTimeGetCurrent()
+        let shouldRefresh = (now - lastProcessFetch) > 2.0
+        let cached = cachedTopProcesses
+        procLock.unlock()
+        
+        if shouldRefresh {
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                self?.refreshTopProcessesInternal(limit: limit)
+            }
+        }
+        
+        return cached.isEmpty ? [] : Array(cached.prefix(limit))
+    }
+    
+    private func refreshTopProcessesInternal(limit: Int) {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/ps")
         task.arguments = ["-Aceo", "pid,pcpu,pmem,comm", "-r"]
@@ -151,13 +171,16 @@ public final class HardwareService: @unchecked Sendable {
                 }
                 
                 list.append(ProcessMetric(pid: pid, name: name, cpuPercent: cpu, memoryPercent: mem))
-                if list.count >= limit {
+                if list.count >= max(10, limit) {
                     break
                 }
             }
         }
         
-        return list
+        procLock.lock()
+        self.cachedTopProcesses = list
+        self.lastProcessFetch = CFAbsoluteTimeGetCurrent()
+        procLock.unlock()
     }
     
     public func getGPUInfo() -> GPUInfo {

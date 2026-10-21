@@ -5,6 +5,7 @@ public enum SidebarTab: String, CaseIterable, Identifiable {
     case benchmark = "Reset Bench"
     case network = "Reset Rede"
     case optimizer = "Reset Otimiza"
+    case menubar = "Barra de Menus"
     case maker = "Reset Maker"
     case about = "Sobre & Créditos"
     
@@ -16,6 +17,7 @@ public enum SidebarTab: String, CaseIterable, Identifiable {
         case .benchmark: return "speedometer"
         case .network: return "network"
         case .optimizer: return "sparkles"
+        case .menubar: return "menubar.rectangle"
         case .maker: return "cpu"
         case .about: return "info.circle"
         }
@@ -35,7 +37,7 @@ public struct MainView: View {
                 }
             }
             .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 190, ideal: 215, max: 250)
+            .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 260)
             
             VStack {
                 Spacer()
@@ -54,12 +56,14 @@ public struct MainView: View {
                 NetworkView()
             case .optimizer:
                 OptimizerView()
+            case .menubar:
+                MenuBarSettingsView()
             case .maker:
                 MakerView()
             case .about:
                 AboutView()
             }
         }
-        .frame(minWidth: 840, minHeight: 560)
+        .frame(minWidth: 880, minHeight: 600)
     }
 }

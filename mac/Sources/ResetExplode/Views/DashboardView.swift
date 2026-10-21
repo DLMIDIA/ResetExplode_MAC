@@ -10,6 +10,7 @@ public struct DashboardView: View {
     @State private var volumes = DiskVolumeService.shared.listMountedVolumes()
     @State private var connectedDevices = ConnectedDevicesService.shared.getSummary()
     @State private var topProcesses = HardwareService.shared.getTopProcesses(limit: 5)
+    @State private var brightness: Float = DisplayBrightnessService.shared.getBrightness()
     
     @State private var showStartupPrompt = !LaunchAtLoginService.shared.hasBeenPrompted
     @State private var launchAtLoginEnabled = LaunchAtLoginService.shared.isEnabled
@@ -492,6 +493,57 @@ public struct DashboardView: View {
                     }
                 }
                 
+                // Card de Ajuste de Brilho dos Monitores (DisplayServices)
+                CardView {
+                    HStack {
+                        Image(systemName: "sun.max.fill")
+                            .foregroundColor(.yellow)
+                            .font(.title2)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("BRILHO DOS MONITORES")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.secondary)
+                            Text("Ajuste em Tempo Real da Iluminação da Tela")
+                                .font(.headline)
+                        }
+                        
+                        Spacer()
+                        
+                        Text("\(Int(brightness * 100))%")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.yellow)
+                    }
+                    
+                    Divider()
+                    
+                    HStack(spacing: 16) {
+                        Image(systemName: "sun.min")
+                            .foregroundColor(.secondary)
+                        
+                        Slider(value: Binding(
+                            get: { Double(brightness) },
+                            set: { val in
+                                brightness = Float(val)
+                                _ = DisplayBrightnessService.shared.setBrightness(brightness)
+                            }
+                        ), in: 0.05...1.0)
+                        .accentColor(.yellow)
+                        
+                        Image(systemName: "sun.max.fill")
+                            .foregroundColor(.yellow)
+                        
+                        HStack(spacing: 6) {
+                            Button("25%") { setBrightness(0.25) }.buttonStyle(.bordered).controlSize(.small)
+                            Button("50%") { setBrightness(0.50) }.buttonStyle(.bordered).controlSize(.small)
+                            Button("75%") { setBrightness(0.75) }.buttonStyle(.bordered).controlSize(.small)
+                            Button("100%") { setBrightness(1.00) }.buttonStyle(.bordered).controlSize(.small)
+                        }
+                    }
+                }
+                
                 // Card de Discos Rígidos e Partições
                 CardView {
                     HStack {
@@ -563,6 +615,11 @@ public struct DashboardView: View {
                 self.connectedDevices = ConnectedDevicesService.shared.getSummary()
             }
         }
+    }
+    
+    private func setBrightness(_ val: Float) {
+        self.brightness = val
+        _ = DisplayBrightnessService.shared.setBrightness(val)
     }
     
     private func iconForUSB(name: String) -> String {

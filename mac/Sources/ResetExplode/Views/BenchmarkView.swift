@@ -432,7 +432,7 @@ public struct BenchmarkView: View {
                 if let res = diskResult {
                     Divider()
                     
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                         MetricBox(
                             title: "LEITURA SEQUENCIAL",
                             value: String(format: "%.0f MB/s", res.seqReadMBs),

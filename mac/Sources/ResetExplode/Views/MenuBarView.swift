@@ -11,6 +11,7 @@ public struct MenuBarView: View {
     @State private var isCleaning = false
     @State private var cleanMessage: String?
     @State private var launchAtLogin = LaunchAtLoginService.shared.isEnabled
+    @State private var brightness: Float = DisplayBrightnessService.shared.getBrightness()
     
     let timer = Timer.publish(every: 2.0, on: .main, in: .common).autoconnect()
     
@@ -163,6 +164,31 @@ public struct MenuBarView: View {
                     .foregroundColor(.cyan)
                     .padding(.horizontal, 4)
             }
+            
+            // Brilho dos Monitores
+            HStack(spacing: 8) {
+                Image(systemName: "sun.min")
+                    .foregroundColor(.secondary)
+                    .font(.caption2)
+                Slider(value: Binding(
+                    get: { Double(brightness) },
+                    set: { val in
+                        brightness = Float(val)
+                        _ = DisplayBrightnessService.shared.setBrightness(brightness)
+                    }
+                ), in: 0.05...1.0)
+                .accentColor(.yellow)
+                Image(systemName: "sun.max.fill")
+                    .foregroundColor(.yellow)
+                    .font(.caption2)
+                Text("\(Int(brightness * 100))%")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .frame(width: 32)
+            }
+            .padding(6)
+            .background(Color.white.opacity(0.03))
+            .cornerRadius(6)
             
             Divider()
             

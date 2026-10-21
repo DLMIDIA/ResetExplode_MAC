@@ -84,11 +84,12 @@ rm -rf "$STAGING_DIR"
 echo "🧪 6. Testando integridade do DMG..."
 hdiutil imageinfo "$DMG_PATH" > /dev/null
 
-MOUNT_DIR=$(hdiutil attach "$DMG_PATH" -nobrowse -readonly | grep "/Volumes" | awk '{print $NF}')
-if [ -n "$MOUNT_DIR" ]; then
+MOUNT_INFO=$(hdiutil attach "$DMG_PATH" -nobrowse -readonly 2>/dev/null || true)
+MOUNT_DIR=$(echo "$MOUNT_INFO" | grep "/Volumes" | awk -F'\t' '{print $NF}' | xargs)
+if [ -n "$MOUNT_DIR" ] && [ -d "$MOUNT_DIR" ]; then
     echo "   Volume montado com sucesso em: $MOUNT_DIR"
     ls -la "$MOUNT_DIR"
-    hdiutil detach "$MOUNT_DIR"
+    hdiutil detach "$MOUNT_DIR" 2>/dev/null || true
     echo "   Volume desmontado com sucesso."
 fi
 
