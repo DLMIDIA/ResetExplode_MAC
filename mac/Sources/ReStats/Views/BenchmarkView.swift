@@ -100,7 +100,9 @@ public struct BenchmarkView: View {
                     diskBenchmarkSection
                 }
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            .padding(.bottom, 48)
         }
         .onAppear {
             volumes = DiskVolumeService.shared.listMountedVolumes()

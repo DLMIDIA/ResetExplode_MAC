@@ -32,11 +32,42 @@ O resultado é o **ReStats**: uma aplicação nativa compilada em Swift 6, com b
 
 ---
 
-## 📸 Interface do Aplicativo
+## 📸 Galeria de Interface & Recursos Reais (macOS Apple Silicon)
 
 <p align="center">
-  <img src="Assets/screenshot-dashboard.png" alt="ReStats Dashboard Interface" width="95%" />
+  <img src="Assets/screenshots/dashboard.png" alt="ReStats Dashboard Apple Silicon M5" width="95%" />
+  <br>
+  <em>Painel Principal: Detecção de chip Apple M5, carga individual por núcleo (P-Cores e E-Cores), memória e monitor de processos em tempo real.</em>
 </p>
+
+<br>
+
+<table align="center" width="100%">
+  <tr>
+    <td width="35%" align="center" valign="top">
+      <strong>⏱️ Popover da Barra de Menus</strong><br><br>
+      <img src="Assets/screenshots/menubar-popover.png" alt="Popover da Barra de Menus" width="100%" />
+      <br><em>Acesso rápido: CPU, RAM, rede, processos pesados, bateria, brilho e atalhos de limpeza.</em>
+    </td>
+    <td width="65%" align="center" valign="top">
+      <strong>🚀 Otimização de Memória & Caches</strong><br><br>
+      <img src="Assets/screenshots/optimizer.png" alt="Otimização de RAM e Caches" width="100%" />
+      <br><em>Liberação de memória inativa e limpeza segura de arquivos temporários e logs do Mac.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <strong>🎛️ Personalização da Barra de Menus</strong><br><br>
+      <img src="Assets/screenshots/menubar-settings.png" alt="Personalização da Barra de Menus" width="100%" />
+      <br><em>Escolha quais módulos exibir no topo do Mac com prévia ao vivo e controle de brilho.</em>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <strong>📜 Filosofia, Origem & Créditos</strong><br><br>
+      <img src="Assets/screenshots/about.png" alt="Sobre & Créditos" width="100%" />
+      <br><em>Atribuição formal a GustavoReset (ResetExplode) e Serhiy Mytrovtsiy (Stats).</em>
+    </td>
+  </tr>
+</table>
 
 ---
 

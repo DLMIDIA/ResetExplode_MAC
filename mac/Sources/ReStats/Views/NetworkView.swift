@@ -362,7 +362,9 @@ public struct NetworkView: View {
                     }
                 }
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            .padding(.bottom, 48)
         }
         .onReceive(timer) { _ in
             stats = NetworkService.shared.getCurrentStats()
