@@ -8,6 +8,7 @@ public struct MenuBarSettingsView: View {
     @State private var showTemp = MenuBarSettingsService.shared.showTemp
     @State private var showBattery = MenuBarSettingsService.shared.showBattery
     @State private var showDisk = MenuBarSettingsService.shared.showDisk
+    @State private var showPomodoro = MenuBarSettingsService.shared.showPomodoro
     
     @State private var monitoredPaths = MenuBarSettingsService.shared.monitoredDiskPaths
     @State private var volumes = DiskVolumeService.shared.listMountedVolumes()
@@ -239,6 +240,29 @@ public struct MenuBarSettingsView: View {
                         }
                         .onChange(of: showDisk) { val in
                             MenuBarSettingsService.shared.showDisk = val
+                            AppDelegate.shared?.refreshStatusBarNow()
+                        }
+                        
+                        Divider()
+                        
+                        // Pomodoro Timer
+                        Toggle(isOn: $showPomodoro) {
+                            HStack {
+                                Image(systemName: "timer")
+                                    .foregroundColor(.orange)
+                                    .frame(width: 24)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Timer Pomodoro & Produtividade")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("Exibe o contador regressivo de foco na barra de menus quando ativo (ex: ⏱️ 24:15)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .onChange(of: showPomodoro) { val in
+                            MenuBarSettingsService.shared.showPomodoro = val
                             AppDelegate.shared?.refreshStatusBarNow()
                         }
                     }

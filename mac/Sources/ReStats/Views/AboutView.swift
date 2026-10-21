@@ -109,7 +109,7 @@ public struct AboutView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.secondary)
                     
-                    HStack(spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                         // GustavoReset
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -163,6 +163,36 @@ public struct AboutView: View {
                                 }
                                 .font(.caption)
                                 .foregroundColor(.green)
+                            }
+                        }
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        .cornerRadius(10)
+                        
+                        // Vorssaint (Vorssaint-Utils)
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "timer")
+                                    .foregroundColor(.purple)
+                                Text("Vorssaint")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                            }
+                            Text("Referência de utilitários de produtividade macOS, automações e Pomodoro timer. Revisitado no ReStats com arquitetura ultra-leve e 0% de overhead.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            Spacer()
+                            
+                            Link(destination: URL(string: "https://github.com/vorssaint/vorssaint-utils")!) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "link")
+                                    Text("GitHub / Vorssaint")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.purple)
                             }
                         }
                         .padding(14)

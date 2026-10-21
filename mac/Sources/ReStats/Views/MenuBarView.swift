@@ -30,6 +30,7 @@ public struct MenuBarView: View {
                 displaysSection
                 disksSection
                 batterySection
+                productivitySection
                 
                 if let msg = cleanMessage {
                     Text(msg)
@@ -248,6 +249,37 @@ public struct MenuBarView: View {
                 }
                 .padding(5)
                 .background(Color.white.opacity(0.03))
+                .cornerRadius(5)
+            }
+        }
+    }
+    
+    private var productivitySection: some View {
+        let pom = PomodoroService.shared
+        let pwr = PowerScheduleService.shared
+        
+        return Group {
+            if pom.state == .running || pwr.isScheduled {
+                VStack(spacing: 5) {
+                    if pom.state == .running {
+                        HStack(spacing: 6) {
+                            Image(systemName: "timer").foregroundColor(.orange)
+                            Text("Pomodoro (\(pom.currentMode.rawValue))").font(.caption2).foregroundColor(.secondary)
+                            Spacer()
+                            Text(pom.formattedTime).font(.caption2).fontWeight(.heavy).foregroundColor(.orange)
+                        }
+                    }
+                    if pwr.isScheduled {
+                        HStack(spacing: 6) {
+                            Image(systemName: pwr.selectedAction.icon).foregroundColor(.green)
+                            Text(pwr.selectedAction.rawValue).font(.caption2).foregroundColor(.secondary)
+                            Spacer()
+                            Text(pwr.formattedRemainingTime).font(.caption2).fontWeight(.heavy).foregroundColor(.green)
+                        }
+                    }
+                }
+                .padding(6)
+                .background(Color.orange.opacity(0.08))
                 .cornerRadius(5)
             }
         }

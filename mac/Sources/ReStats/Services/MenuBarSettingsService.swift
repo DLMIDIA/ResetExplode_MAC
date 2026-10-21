@@ -10,6 +10,7 @@ public final class MenuBarSettingsService: @unchecked Sendable {
     private let keyShowBattery = "br.com.dlmidia.restats.menuBarShowBattery"
     private let keyShowDisk = "br.com.dlmidia.restats.menuBarShowDisk"
     private let keyShowTemp = "br.com.dlmidia.restats.menuBarShowTemp"
+    private let keyShowPomodoro = "br.com.dlmidia.restats.menuBarShowPomodoro"
     private let keyMonitoredDiskPaths = "br.com.dlmidia.restats.monitoredDisks"
     
     private init() {
@@ -21,6 +22,7 @@ public final class MenuBarSettingsService: @unchecked Sendable {
             UserDefaults.standard.set(false, forKey: keyShowBattery)
             UserDefaults.standard.set(false, forKey: keyShowDisk)
             UserDefaults.standard.set(false, forKey: keyShowTemp)
+            UserDefaults.standard.set(true, forKey: keyShowPomodoro)
             UserDefaults.standard.set(["/"], forKey: keyMonitoredDiskPaths)
         }
     }
@@ -60,6 +62,11 @@ public final class MenuBarSettingsService: @unchecked Sendable {
         set { UserDefaults.standard.set(newValue, forKey: keyShowTemp) }
     }
     
+    public var showPomodoro: Bool {
+        get { UserDefaults.standard.bool(forKey: keyShowPomodoro) }
+        set { UserDefaults.standard.set(newValue, forKey: keyShowPomodoro) }
+    }
+    
     public var monitoredDiskPaths: [String] {
         get { UserDefaults.standard.stringArray(forKey: keyMonitoredDiskPaths) ?? ["/"] }
         set { UserDefaults.standard.set(newValue, forKey: keyMonitoredDiskPaths) }
@@ -79,6 +86,7 @@ public final class MenuBarSettingsService: @unchecked Sendable {
         monitoredDiskPaths = current
     }
     
+    @MainActor
     public func formattedStatusText(
         cpu: Double,
         ram: Double,
@@ -104,6 +112,12 @@ public final class MenuBarSettingsService: @unchecked Sendable {
         }
         if showBattery {
             segments.append("🔋\(batteryPct)%")
+        }
+        if showPomodoro && PomodoroService.shared.state == .running {
+            segments.append("⏱️ \(PomodoroService.shared.formattedTime)")
+        }
+        if PowerScheduleService.shared.isScheduled {
+            segments.append("⏻ \(PowerScheduleService.shared.formattedRemainingTime)")
         }
         if showDisk {
             let monitored = volumes.filter { monitoredDiskPaths.contains($0.path) }

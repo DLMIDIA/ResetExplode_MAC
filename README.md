@@ -161,6 +161,26 @@ A instalação no macOS é instantânea:
 
 ---
 
+### 6. 🍅 Produtividade, Automação & IA (Inspirado no Vorssaint)
+* **Timer Pomodoro (Foco Profundo & Ritmo):**
+  * Ciclos calibrados: **Foco (25 min)**, **Pausa Curta (5 min)** e **Pausa Longa (15 min)**.
+  * Anel de progresso visual com gradiente dinâmico e aviso sonoro ao término de cada etapa.
+  * Integração opcional com a **Barra de Menus** do Mac (`⏱️ 24:15`), permitindo acompanhar seu tempo sem abrir a janela.
+* **Desligamento & Repouso Programado (Sleep/Shutdown Timer):**
+  * Agende o desligamento automático do Mac após processos longos de renderização ou downloads pesados à noite.
+  * Presets rápidos: **30 min**, **1 hora**, **2 horas**, **4 horas** ou em **horário exato** do relógio.
+  * Ações suportadas: Desligar (`Shut Down`), Repouso (`Sleep`) ou Reiniciar (`Restart`).
+  * Contagem regressiva em tempo real com botão de cancelamento a qualquer momento.
+* **Verificador de Atualizações do macOS:**
+  * Checagem em background de pacotes e patches pendentes no catálogo da Apple (`softwareupdate --list`).
+  * Atalho direto para os Ajustes do Sistema.
+* **Telemetria de IA & Antigravity (Google Gemini & Vibe Toolkit):**
+  * Conexão nativa e instantânea com o banco SQLite local do Google Antigravity (`~/.gemini/antigravity/conversation_summaries.db`).
+  * Telemetria de total de conversas ativas, contagem de passos de agentes executados e estimativa de tokens consumidos.
+  * Integração direta com a CLI do **Antigravity Vibe Toolkit** (`agy-vibe`), permitindo auditorias de auto-pilot e verificação de quality gates.
+
+---
+
 ## 📊 Tabela de Referência de Benchmarks de CPU
 
 | Processador | Arquitetura | Single-Core (pts) | Multi-Core (pts) | Vazão de Memória |
@@ -207,6 +227,7 @@ O **ReStats** é um projeto de código aberto que homenageia e se apoia no traba
 | :--- | :--- | :---: | :---: |
 | **GustavoReset** (*ResetExplode*) | Conceito original para Windows, suíte de benchmarks, testes de estresse e ecossistema Maker. | [GitHub](https://github.com/GustavoReset/ResetExplode) | MIT |
 | **Serhiy Mytrovtsiy** (*Stats*) | Referência máxima de telemetria macOS, arquitetura de chamadas Mach Kernel e design de Menu Bar. | [GitHub](https://github.com/exelban/stats) | MIT |
+| **Vorssaint** (*Vorssaint-Utils*) | Inspiração em utilitários de produtividade macOS, automação de foco Pomodoro e ferramentas de desenvolvedor. | [GitHub](https://github.com/vorssaint/vorssaint-utils) | MIT |
 | **DL MIDIA** (*ReStats*) | Fusão arquitetural, desenvolvimento nativo em Swift 6, engenharia para Apple Silicon M-Series e distribuição. | [GitHub](https://github.com/DLMIDIA/ResetExplode_MAC) | MIT |
 
 ---
