@@ -57,7 +57,7 @@ public final class DiskVolumeService: @unchecked Sendable {
         return volumes.sorted { a, _ in a.path == "/" }
     }
     
-    public func runBenchmark(on volume: DiskVolume, sizeMB: Int = 256, onProgress: @escaping @Sendable (String, Double) -> Void) async -> DiskBenchResult {
+    public func runBenchmark(on volume: DiskVolume, sizeMB: Int = 128, onProgress: @escaping @Sendable (String, Double) -> Void) async -> DiskBenchResult {
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 let testFilePath: String
@@ -72,8 +72,8 @@ public final class DiskVolumeService: @unchecked Sendable {
                 let totalBytes = Int64(totalBlocks) * Int64(blockSize)
                 var buffer = [UInt8](repeating: 0x55, count: blockSize)
                 
-                // 1. Escrita Sequencial (F_NOCACHE para medir o disco de verdade sem cache de memória)
-                onProgress("Testando Escrita em \(volume.name)...", 0.1)
+                // 1. Escrita Sequencial (F_NOCACHE)
+                onProgress("Testando Escrita Sequencial (1 MB)...", 0.05)
                 let fdWrite = open(testFilePath, O_WRONLY | O_CREAT | O_TRUNC, 0o666)
                 if fdWrite >= 0 {
                     _ = fcntl(fdWrite, F_NOCACHE, 1)
@@ -84,8 +84,8 @@ public final class DiskVolumeService: @unchecked Sendable {
                     for b in 0..<totalBlocks {
                         _ = write(fdWrite, &buffer, blockSize)
                         if b % 16 == 0 {
-                            let pct = 0.1 + 0.45 * (Double(b) / Double(totalBlocks))
-                            onProgress("Escrevendo blocos de 1 MB...", pct)
+                            let pct = 0.05 + 0.35 * (Double(b) / Double(totalBlocks))
+                            onProgress("Escrevendo blocos de 1 MB (\(b)/\(totalBlocks))...", pct)
                         }
                     }
                     close(fdWrite)
@@ -93,8 +93,8 @@ public final class DiskVolumeService: @unchecked Sendable {
                 let writeElapsed = max(0.001, CFAbsoluteTimeGetCurrent() - writeStart)
                 let seqWriteMBs = Double(totalBytes) / (1024.0 * 1024.0) / writeElapsed
                 
-                // 2. Leitura Sequencial
-                onProgress("Testando Leitura em \(volume.name)...", 0.6)
+                // 2. Leitura Sequencial (F_NOCACHE)
+                onProgress("Testando Leitura Sequencial (1 MB)...", 0.45)
                 let fdRead = open(testFilePath, O_RDONLY)
                 if fdRead >= 0 {
                     _ = fcntl(fdRead, F_NOCACHE, 1)
@@ -105,8 +105,8 @@ public final class DiskVolumeService: @unchecked Sendable {
                     for b in 0..<totalBlocks {
                         _ = read(fdRead, &buffer, blockSize)
                         if b % 16 == 0 {
-                            let pct = 0.6 + 0.38 * (Double(b) / Double(totalBlocks))
-                            onProgress("Lendo blocos de 1 MB...", pct)
+                            let pct = 0.45 + 0.30 * (Double(b) / Double(totalBlocks))
+                            onProgress("Lendo blocos de 1 MB (\(b)/\(totalBlocks))...", pct)
                         }
                     }
                     close(fdRead)
@@ -114,15 +114,58 @@ public final class DiskVolumeService: @unchecked Sendable {
                 let readElapsed = max(0.001, CFAbsoluteTimeGetCurrent() - readStart)
                 let seqReadMBs = Double(totalBytes) / (1024.0 * 1024.0) / readElapsed
                 
-                // Limpeza do arquivo de teste
+                // 3. Teste Random 4K IOPS Read
+                onProgress("Testando Leitura Aleatória 4K (IOPS)...", 0.80)
+                let fdRand = open(testFilePath, O_RDONLY)
+                if fdRand >= 0 {
+                    _ = fcntl(fdRand, F_NOCACHE, 1)
+                }
+                
+                var buf4k = [UInt8](repeating: 0, count: 4096)
+                let randCount = 2000
+                let maxOffsets = max(1, (totalBytes - 4096) / 4096)
+                let randStart = CFAbsoluteTimeGetCurrent()
+                
+                if fdRand >= 0 {
+                    for _ in 0..<randCount {
+                        let offset = off_t(Int64.random(in: 0..<maxOffsets) * 4096)
+                        lseek(fdRand, offset, SEEK_SET)
+                        _ = read(fdRand, &buf4k, 4096)
+                    }
+                    close(fdRand)
+                }
+                let randElapsed = max(0.0001, CFAbsoluteTimeGetCurrent() - randStart)
+                let rand4kReadIOPS = Double(randCount) / randElapsed
+                
+                // 4. Teste Random 4K IOPS Write
+                onProgress("Testando Escrita Aleatória 4K (IOPS)...", 0.90)
+                let fdRandW = open(testFilePath, O_WRONLY)
+                if fdRandW >= 0 {
+                    _ = fcntl(fdRandW, F_NOCACHE, 1)
+                }
+                let randWStart = CFAbsoluteTimeGetCurrent()
+                if fdRandW >= 0 {
+                    for _ in 0..<randCount {
+                        let offset = off_t(Int64.random(in: 0..<maxOffsets) * 4096)
+                        lseek(fdRandW, offset, SEEK_SET)
+                        _ = write(fdRandW, &buf4k, 4096)
+                    }
+                    close(fdRandW)
+                }
+                let randWElapsed = max(0.0001, CFAbsoluteTimeGetCurrent() - randWStart)
+                let rand4kWriteIOPS = Double(randCount) / randWElapsed
+                
+                // Limpeza
                 unlink(testFilePath)
-                onProgress("Concluído!", 1.0)
+                onProgress("Benchmark de Armazenamento Concluído!", 1.0)
                 
                 let result = DiskBenchResult(
                     volumeName: volume.name,
                     seqReadMBs: seqReadMBs,
                     seqWriteMBs: seqWriteMBs,
-                    durationSeconds: writeElapsed + readElapsed
+                    random4kReadIOPS: rand4kReadIOPS,
+                    random4kWriteIOPS: rand4kWriteIOPS,
+                    durationSeconds: writeElapsed + readElapsed + randElapsed + randWElapsed
                 )
                 continuation.resume(returning: result)
             }

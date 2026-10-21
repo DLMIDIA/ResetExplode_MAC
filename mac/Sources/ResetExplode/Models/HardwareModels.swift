@@ -47,12 +47,38 @@ public struct DiskVolume: Identifiable, Hashable, Equatable, Sendable {
 
 public typealias DiskInfo = DiskVolume
 
-
 public struct BatteryInfo: Equatable, Sendable {
     public let isPresent: Bool
     public let percentage: Int
+    public let cycleCount: Int
+    public let designCycleCount: Int
+    public let healthPercentage: Double
     public let isCharging: Bool
-    public let sourceState: String
+    public let isFullyCharged: Bool
+    public let isPluggedIn: Bool
+    public let voltageMV: Int
+    public let designCapacityMAh: Int
+    public let fullChargeCapacityMAh: Int
+    public let condition: String
+    public let statusDescription: String
+    
+    public static var desktopPlaceholder: BatteryInfo {
+        BatteryInfo(
+            isPresent: false,
+            percentage: 100,
+            cycleCount: 0,
+            designCycleCount: 1000,
+            healthPercentage: 100.0,
+            isCharging: false,
+            isFullyCharged: true,
+            isPluggedIn: true,
+            voltageMV: 0,
+            designCapacityMAh: 0,
+            fullChargeCapacityMAh: 0,
+            condition: "Alimentação AC",
+            statusDescription: "Desktop Mac (Alimentação Direta)"
+        )
+    }
 }
 
 public struct CPUBenchResult: Equatable, Sendable {
@@ -62,10 +88,18 @@ public struct CPUBenchResult: Equatable, Sendable {
     public let isMultiCore: Bool
 }
 
+public struct MemoryBenchResult: Equatable, Sendable {
+    public let bandwidthGBs: Double
+    public let latencyNs: Double
+    public let durationSeconds: Double
+}
+
 public struct DiskBenchResult: Equatable, Sendable {
     public let volumeName: String
     public let seqReadMBs: Double
     public let seqWriteMBs: Double
+    public let random4kReadIOPS: Double
+    public let random4kWriteIOPS: Double
     public let durationSeconds: Double
 }
 
@@ -81,6 +115,37 @@ public struct NetworkStats: Equatable, Sendable {
     public let uploadSpeedKBps: Double
     public let localIP: String
     public let activeInterface: String
+    public let gatewayIP: String
+    public let dnsServers: [String]
+    public let macAddress: String
+}
+
+public struct ConnectedDisplay: Identifiable, Equatable, Sendable {
+    public var id: String { name + resolution }
+    public let name: String
+    public let resolution: String
+    public let refreshRate: String
+    public let isMain: Bool
+    public let isBuiltIn: Bool
+}
+
+public struct ConnectedUSBDevice: Identifiable, Equatable, Sendable {
+    public var id: String { name + vendor }
+    public let name: String
+    public let vendor: String
+}
+
+public struct ConnectedBluetoothDevice: Identifiable, Equatable, Sendable {
+    public var id: String { address }
+    public let name: String
+    public let address: String
+    public let isConnected: Bool
+}
+
+public struct ConnectedDevicesSummary: Equatable, Sendable {
+    public let displays: [ConnectedDisplay]
+    public let usbDevices: [ConnectedUSBDevice]
+    public let bluetoothDevices: [ConnectedBluetoothDevice]
 }
 
 public struct CleanableCaches: Equatable, Sendable {

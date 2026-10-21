@@ -2,18 +2,15 @@ import SwiftUI
 
 @main
 struct ResetExplodeApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     var body: some Scene {
-        WindowGroup {
+        WindowGroup("ResetExplode") {
             MainView()
                 .preferredColorScheme(.dark)
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 960, height: 640)
-        
-        MenuBarExtra("ResetExplode", systemImage: "bolt.shield.fill") {
-            MenuBarView()
-        }
-        .menuBarExtraStyle(.window)
+        .defaultSize(width: 980, height: 680)
     }
 }

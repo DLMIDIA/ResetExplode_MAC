@@ -2,6 +2,7 @@ import Foundation
 import Metal
 import Darwin
 import IOKit.ps
+import IOKit
 
 public final class HardwareService: @unchecked Sendable {
     public static let shared = HardwareService()
@@ -107,18 +108,69 @@ public final class HardwareService: @unchecked Sendable {
     }
     
     public func getBatteryInfo() -> BatteryInfo {
-        if let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
-           let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [CFTypeRef],
-           !sources.isEmpty {
-            for source in sources {
-                if let desc = IOPSGetPowerSourceDescription(snapshot, source)?.takeUnretainedValue() as? [String: Any] {
-                    let cap = desc[kIOPSCurrentCapacityKey] as? Int ?? 100
-                    let isCharging = (desc[kIOPSIsChargingKey] as? Bool) ?? false
-                    let state = desc[kIOPSPowerSourceStateKey] as? String ?? "AC Power"
-                    return BatteryInfo(isPresent: true, percentage: cap, isCharging: isCharging, sourceState: state)
+        let match = IOServiceMatching("AppleSmartBattery")
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, match)
+        
+        if service != 0 {
+            var props: Unmanaged<CFMutableDictionary>?
+            if IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
+               let dict = props?.takeRetainedValue() as? [String: Any] {
+                IOObjectRelease(service)
+                
+                let cycleCount = dict["CycleCount"] as? Int ?? 0
+                let designCycleCount = dict["DesignCycleCount9C"] as? Int ?? 1000
+                let percentage = dict["CurrentCapacity"] as? Int ?? 100
+                let isCharging = (dict["IsCharging"] as? Bool) ?? ((dict["IsCharging"] as? Int) == 1)
+                let isFullyCharged = (dict["FullyCharged"] as? Bool) ?? ((dict["FullyCharged"] as? Int) == 1)
+                let isPluggedIn = (dict["ExternalConnected"] as? Bool) ?? ((dict["ExternalConnected"] as? Int) == 1)
+                let voltage = dict["Voltage"] as? Int ?? 0
+                
+                var designCap = 4629
+                var fullCap = 4483
+                if let batteryData = dict["BatteryData"] as? [String: Any] {
+                    designCap = batteryData["DesignCapacity"] as? Int ?? designCap
+                    fullCap = batteryData["FullChargeCapacity"] as? Int ?? fullCap
                 }
+                
+                var health = 100.0
+                if designCap > 0 {
+                    health = min(100.0, max(0.0, (Double(fullCap) / Double(designCap)) * 100.0))
+                }
+                
+                let statusDesc: String
+                if isPluggedIn {
+                    if isFullyCharged {
+                        statusDesc = "Tomada (Carga Completa 100%)"
+                    } else if isCharging {
+                        statusDesc = "Tomada (Carregando...)"
+                    } else {
+                        statusDesc = "Tomada (Alimentação Direta)"
+                    }
+                } else {
+                    statusDesc = "Bateria (Descarregando)"
+                }
+                
+                let condition = health >= 80.0 ? "Normal (Excelente)" : "Serviço Recomendado"
+                
+                return BatteryInfo(
+                    isPresent: true,
+                    percentage: percentage,
+                    cycleCount: cycleCount,
+                    designCycleCount: designCycleCount,
+                    healthPercentage: health,
+                    isCharging: isCharging,
+                    isFullyCharged: isFullyCharged,
+                    isPluggedIn: isPluggedIn,
+                    voltageMV: voltage,
+                    designCapacityMAh: designCap,
+                    fullChargeCapacityMAh: fullCap,
+                    condition: condition,
+                    statusDescription: statusDesc
+                )
             }
+            IOObjectRelease(service)
         }
-        return BatteryInfo(isPresent: false, percentage: 100, isCharging: false, sourceState: "Desktop / Tomada")
+        
+        return BatteryInfo.desktopPlaceholder
     }
 }

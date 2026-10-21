@@ -33,9 +33,9 @@ cat <<EOF > "$APP_PATH/Contents/Info.plist"
     <key>CFBundleIdentifier</key>
     <string>br.com.dlmidia.resetexplode</string>
     <key>CFBundleVersion</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -46,11 +46,18 @@ cat <<EOF > "$APP_PATH/Contents/Info.plist"
     <string>13.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>O ResetExplode analisa dispositivos e periféricos Bluetooth para monitorar status e diagnóstico de hardware.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>O ResetExplode analisa dispositivos e periféricos Bluetooth para monitorar status e diagnóstico de hardware.</string>
 </dict>
 </plist>
 EOF
 
 chmod +x "$APP_PATH/Contents/MacOS/ResetExplode"
+codesign --force --deep -s - "$APP_PATH"
 xattr -cr "$APP_PATH" 2>/dev/null || true
 
 echo "✅ Sucesso! Aplicativo gerado em: $APP_PATH"
