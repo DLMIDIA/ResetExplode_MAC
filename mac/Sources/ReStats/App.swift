@@ -1,16 +1,16 @@
 import SwiftUI
 
 @main
-struct ResetExplodeApp: App {
+struct ReStatsApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        WindowGroup("ResetExplode") {
+        WindowGroup("ReStats") {
             MainView()
                 .preferredColorScheme(.dark)
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 980, height: 680)
+        .defaultSize(width: 1020, height: 700)
     }
 }

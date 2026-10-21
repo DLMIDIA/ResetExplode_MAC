@@ -5,7 +5,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
 echo "=========================================="
-echo "⚡ RESET EXPLODE MAC - GERADOR DE PACOTE DMG"
+echo "⚡ RESTATS (RESET + STATS) - GERADOR DMG"
 echo "=========================================="
 
 echo "🔨 1. Compilando binário nativo Apple Silicon (Release)..."
@@ -13,18 +13,18 @@ cd "$DIR/mac"
 swift build -c release
 cd "$DIR"
 
-BIN_PATH="$DIR/mac/.build/release/ResetExplode"
-APP_PATH="$DIR/ResetExplode.app"
-DMG_NAME="ResetExplode-AppleSilicon.dmg"
+BIN_PATH="$DIR/mac/.build/release/ReStats"
+APP_PATH="$DIR/ReStats.app"
+DMG_NAME="ReStats-AppleSilicon.dmg"
 DMG_PATH="$DIR/$DMG_NAME"
 STAGING_DIR="$DIR/.dmg_staging"
 
-echo "📦 2. Montando estrutura do ResetExplode.app..."
+echo "📦 2. Montando estrutura do ReStats.app..."
 rm -rf "$APP_PATH"
 mkdir -p "$APP_PATH/Contents/MacOS"
 mkdir -p "$APP_PATH/Contents/Resources"
 
-cp "$BIN_PATH" "$APP_PATH/Contents/MacOS/ResetExplode"
+cp "$BIN_PATH" "$APP_PATH/Contents/MacOS/ReStats"
 
 if [ -f "$DIR/Assets/AppIcon.icns" ]; then
     cp "$DIR/Assets/AppIcon.icns" "$APP_PATH/Contents/Resources/AppIcon.icns"
@@ -36,19 +36,19 @@ cat <<EOF > "$APP_PATH/Contents/Info.plist"
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>ResetExplode</string>
+    <string>ReStats</string>
     <key>CFBundleDisplayName</key>
-    <string>ResetExplode</string>
+    <string>ReStats</string>
     <key>CFBundleIdentifier</key>
-    <string>br.com.dlmidia.resetexplode</string>
+    <string>br.com.dlmidia.restats</string>
     <key>CFBundleVersion</key>
-    <string>1.1.0</string>
+    <string>1.2.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.1.0</string>
+    <string>1.2.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
-    <string>ResetExplode</string>
+    <string>ReStats</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
@@ -58,16 +58,16 @@ cat <<EOF > "$APP_PATH/Contents/Info.plist"
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
     <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>O ResetExplode analisa dispositivos e periféricos Bluetooth para monitorar status e diagnóstico de hardware.</string>
+    <string>O ReStats analisa dispositivos e periféricos Bluetooth para monitorar status e diagnóstico de hardware.</string>
     <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>O ResetExplode analisa dispositivos e periféricos Bluetooth para monitorar status e diagnóstico de hardware.</string>
+    <string>O ReStats analisa dispositivos e periféricos Bluetooth para monitorar status e diagnóstico de hardware.</string>
 </dict>
 </plist>
 EOF
 
-chmod +x "$APP_PATH/Contents/MacOS/ResetExplode"
+chmod +x "$APP_PATH/Contents/MacOS/ReStats"
 
-echo "🔏 3. Assinando ResetExplode.app (Ad-hoc codesign)..."
+echo "🔏 3. Assinando ReStats.app (Ad-hoc codesign)..."
 codesign --force --deep -s - "$APP_PATH"
 xattr -cr "$APP_PATH" 2>/dev/null || true
 
@@ -78,7 +78,7 @@ cp -R "$APP_PATH" "$STAGING_DIR/"
 ln -s /Applications "$STAGING_DIR/Applications"
 
 echo "🚀 5. Gerando $DMG_NAME compactado (UDZO)..."
-hdiutil create -volname "ResetExplode" -srcfolder "$STAGING_DIR" -ov -format UDZO "$DMG_PATH"
+hdiutil create -volname "ReStats" -srcfolder "$STAGING_DIR" -ov -format UDZO "$DMG_PATH"
 rm -rf "$STAGING_DIR"
 
 echo "🧪 6. Testando integridade do DMG..."

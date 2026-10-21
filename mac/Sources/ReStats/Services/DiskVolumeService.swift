@@ -62,9 +62,9 @@ public final class DiskVolumeService: @unchecked Sendable {
             DispatchQueue.global(qos: .userInitiated).async {
                 let testFilePath: String
                 if volume.path == "/" {
-                    testFilePath = (NSTemporaryDirectory() as NSString).appendingPathComponent("ResetExplode_disk_test.bin")
+                    testFilePath = (NSTemporaryDirectory() as NSString).appendingPathComponent("ReStats_disk_test.bin")
                 } else {
-                    testFilePath = (volume.path as NSString).appendingPathComponent(".ResetExplode_disk_test.bin")
+                    testFilePath = (volume.path as NSString).appendingPathComponent(".ReStats_disk_test.bin")
                 }
                 
                 let blockSize = 1024 * 1024 // 1 MB

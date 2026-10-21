@@ -20,7 +20,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         
         if let button = statusItem?.button {
             if MenuBarSettingsService.shared.showIcon {
-                button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ResetExplode")
+                button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ReStats")
                 button.imagePosition = .imageLeading
             } else {
                 button.image = nil
@@ -70,7 +70,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         
         if !found {
             // Se fechada, reabre
-            if let url = URL(string: "resetexplode://main") {
+            if let url = URL(string: "restats://main") {
                 NSWorkspace.shared.open(url)
             }
         }
@@ -98,7 +98,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = self.statusItem?.button else { return }
         
         if MenuBarSettingsService.shared.showIcon {
-            button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ResetExplode")
+            button.image = NSImage(systemSymbolName: "bolt.shield.fill", accessibilityDescription: "ReStats")
             button.imagePosition = .imageLeading
         } else {
             button.image = nil

@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "ResetExplode",
+    name: "ReStats",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "ResetExplode", targets: ["ResetExplode"])
+        .executable(name: "ReStats", targets: ["ReStats"])
     ],
     targets: [
         .executableTarget(
-            name: "ResetExplode",
-            path: "Sources/ResetExplode"
+            name: "ReStats",
+            path: "Sources/ReStats"
         )
     ]
 )

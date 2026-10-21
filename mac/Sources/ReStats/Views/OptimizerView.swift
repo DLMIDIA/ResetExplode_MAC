@@ -139,7 +139,7 @@ public struct OptimizerView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("INICIALIZAR JUNTO COM O MAC")
                                 .font(.headline)
-                            Text("Inicia o ResetExplode automaticamente ao ligar o computador para monitorar sistema, rede e manter seu Mac sempre leve.")
+                            Text("Inicia o ReStats automaticamente ao ligar o computador para monitorar sistema, rede e manter seu Mac sempre leve.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

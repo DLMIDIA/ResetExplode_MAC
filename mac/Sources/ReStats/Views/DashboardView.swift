@@ -30,7 +30,7 @@ public struct DashboardView: View {
                             .foregroundColor(.cyan)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Deseja iniciar o ResetExplode com o macOS?")
+                            Text("Deseja iniciar o ReStats com o macOS?")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             Text("O aplicativo permanecerá em segundo plano na barra de menus, monitorando recursos, bateria e rede em tempo real com baixo consumo.")

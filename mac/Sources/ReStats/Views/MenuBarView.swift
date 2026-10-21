@@ -25,11 +25,11 @@ public struct MenuBarView: View {
                     .foregroundColor(.cyan)
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("RESET EXPLODE")
+                    Text("RESTATS")
                         .font(.caption)
-                        .fontWeight(.bold)
+                        .fontWeight(.black)
                         .foregroundColor(.primary)
-                    Text("Status & Telemetria Apple Silicon")
+                    Text("Telemetria Apple Silicon")
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }

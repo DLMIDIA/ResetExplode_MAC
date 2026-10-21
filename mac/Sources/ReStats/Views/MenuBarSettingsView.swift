@@ -83,7 +83,7 @@ public struct MenuBarSettingsView: View {
                                     .foregroundColor(.cyan)
                                     .frame(width: 24)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Ícone do ResetExplode")
+                                    Text("Ícone do ReStats")
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
                                     Text("Exibe o escudo com raio na barra de menus")
@@ -249,7 +249,7 @@ public struct MenuBarSettingsView: View {
                     
                     Toggle(isOn: $launchAtLogin) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Iniciar o ResetExplode automaticamente com o macOS")
+                            Text("Iniciar o ReStats automaticamente com o macOS")
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                             Text("Mantém o monitor de telemetria ativo na barra de menus ao ligar o computador.")
