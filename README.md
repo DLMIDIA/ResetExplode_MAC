@@ -172,7 +172,7 @@ A instalação no macOS é instantânea:
 
 ---
 
-### 6. 🍅 Produtividade, Automação & IA (Inspirado no Vorssaint)
+### 6. 🍅 Produtividade & Energia (Inspirado no Vorssaint)
 * **Timer Pomodoro (Foco Profundo & Ritmo):**
   * Ciclos calibrados: **Foco (25 min)**, **Pausa Curta (5 min)** e **Pausa Longa (15 min)**.
   * Anel de progresso visual com gradiente dinâmico e aviso sonoro ao término de cada etapa.
@@ -185,10 +185,6 @@ A instalação no macOS é instantânea:
 * **Verificador de Atualizações do macOS:**
   * Checagem em background de pacotes e patches pendentes no catálogo da Apple (`softwareupdate --list`).
   * Atalho direto para os Ajustes do Sistema.
-* **Telemetria de IA & Antigravity (Google Gemini & Vibe Toolkit):**
-  * Conexão nativa e instantânea com o banco SQLite local do Google Antigravity (`~/.gemini/antigravity/conversation_summaries.db`).
-  * Telemetria de total de conversas ativas, contagem de passos de agentes executados e estimativa de tokens consumidos.
-  * Integração direta com a CLI do **Antigravity Vibe Toolkit** (`agy-vibe`), permitindo auditorias de auto-pilot e verificação de quality gates.
 
 ---
 

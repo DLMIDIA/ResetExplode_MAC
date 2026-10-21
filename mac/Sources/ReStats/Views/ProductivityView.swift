@@ -4,7 +4,6 @@ public struct ProductivityView: View {
     @StateObject private var pomodoro = PomodoroService.shared
     @StateObject private var powerScheduler = PowerScheduleService.shared
     @StateObject private var updateService = SoftwareUpdateService.shared
-    @StateObject private var aiTelemetry = AITelemetryService.shared
     
     @State private var selectedPowerMinutes: Int = 60
     @State private var customTargetTime: Date = Date().addingTimeInterval(3600)
@@ -24,14 +23,11 @@ public struct ProductivityView: View {
                 
                 // Seção de Atualizações do Sistema
                 softwareUpdateCard
-                
-                // Seção de Agentes de IA & Antigravity
-                aiTelemetryCard
             }
             .padding(24)
         }
         .background(Color(NSColor.windowBackgroundColor))
-        .navigationTitle("Produtividade & Automação")
+        .navigationTitle("Produtividade & Energia")
     }
     
     // MARK: - Header
@@ -53,7 +49,7 @@ public struct ProductivityView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text("Produtividade, Energia & IA")
+                    Text("Produtividade & Energia")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                     
                     Text("Vorssaint + Stats Engine")
@@ -65,7 +61,7 @@ public struct ProductivityView: View {
                         .cornerRadius(4)
                 }
                 
-                Text("Gerencie ciclos de foco Pomodoro, desligamento programado, atualizações do macOS e telemetria de IA.")
+                Text("Gerencie ciclos de foco Pomodoro, desligamento programado e atualizações do macOS.")
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
@@ -361,167 +357,6 @@ public struct ProductivityView: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(NSColor.controlBackgroundColor))
                 .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
-        )
-    }
-    
-    // MARK: - AI Telemetry Card
-    private var aiTelemetryCard: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Label("Antigravity AI & Vibe Toolkit Telemetria", systemImage: "cpu.fill")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                if aiTelemetry.hasVibeToolkit {
-                    HStack(spacing: 4) {
-                        Circle().fill(Color.green).frame(width: 7, height: 7)
-                        Text("agy-vibe CONECTADO")
-                            .font(.system(size: 9, weight: .heavy))
-                            .foregroundColor(.green)
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.green.opacity(0.12))
-                    .cornerRadius(4)
-                }
-                
-                Button(action: { aiTelemetry.refreshTelemetry() }) {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .buttonStyle(.plain)
-                .help("Atualizar Telemetria de IA")
-            }
-            
-            // Metrics Row
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                metricBox(title: "Sessões de IA", value: "\(aiTelemetry.totalSessions)", icon: "bubble.left.and.bubble.right.fill", color: .purple)
-                metricBox(title: "Passos de Agente", value: aiTelemetry.formatNumber(aiTelemetry.totalSteps), icon: "figure.walk", color: .blue)
-                metricBox(title: "Tokens Estimados", value: aiTelemetry.formatTokenCount(aiTelemetry.estimatedTokens), icon: "sparkles", color: .indigo)
-                metricBox(title: "Compliance Vibe", value: aiTelemetry.hasVibeToolkit ? "100%" : "Inativo", icon: "shield.checkerboard", color: .green)
-            }
-            
-            Divider()
-            
-            // Recent Sessions
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Últimas Sessões do Antigravity:")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.secondary)
-                
-                if aiTelemetry.recentSessions.isEmpty {
-                    Text("Nenhuma sessão recente encontrada no banco de dados local.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                        .padding(.vertical, 6)
-                } else {
-                    VStack(spacing: 6) {
-                        ForEach(aiTelemetry.recentSessions) { session in
-                            HStack {
-                                Image(systemName: "terminal.fill")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.purple)
-                                
-                                Text(session.title)
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .lineLimit(1)
-                                
-                                Spacer()
-                                
-                                Text("\(session.stepCount) passos")
-                                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.cyan)
-                                
-                                Text(session.lastModified)
-                                    .font(.system(size: 9))
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color(NSColor.textBackgroundColor).opacity(0.4))
-                            .cornerRadius(6)
-                        }
-                    }
-                }
-            }
-            
-            // Vibe CLI Actions & Console
-            if aiTelemetry.hasVibeToolkit {
-                Divider()
-                
-                HStack(spacing: 12) {
-                    Text("Ações de Governança:")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.secondary)
-                    
-                    Button(action: { aiTelemetry.runAutopilot() }) {
-                        Label("Executar Auto-Pilot", systemImage: "airplane.departure")
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(aiTelemetry.isRunningAction)
-                    
-                    Button(action: { aiTelemetry.runVerify() }) {
-                        Label("Verificar Quality Gate", systemImage: "checkmark.shield")
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(aiTelemetry.isRunningAction)
-                    
-                    Spacer()
-                    
-                    if aiTelemetry.isRunningAction {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
-                }
-                
-                if !aiTelemetry.actionConsoleOutput.isEmpty {
-                    ScrollView {
-                        Text(aiTelemetry.actionConsoleOutput)
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundColor(.green)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(8)
-                    }
-                    .frame(height: 120)
-                    .background(Color.black.opacity(0.85))
-                    .cornerRadius(8)
-                }
-            }
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
-        )
-    }
-    
-    private func metricBox(title: String, value: String, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundColor(color)
-                Spacer()
-            }
-            
-            Text(value)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-            
-            Text(title)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.secondary)
-        }
-        .padding(10)
-        .background(Color(NSColor.controlBackgroundColor).opacity(0.6))
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(color.opacity(0.2), lineWidth: 1)
         )
     }
 }
