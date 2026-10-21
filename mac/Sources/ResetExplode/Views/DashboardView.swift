@@ -9,6 +9,7 @@ public struct DashboardView: View {
     @State private var macModel = HardwareService.shared.getMacModelName()
     @State private var volumes = DiskVolumeService.shared.listMountedVolumes()
     @State private var connectedDevices = ConnectedDevicesService.shared.getSummary()
+    @State private var topProcesses = HardwareService.shared.getTopProcesses(limit: 5)
     
     @State private var showStartupPrompt = !LaunchAtLoginService.shared.hasBeenPrompted
     @State private var launchAtLoginEnabled = LaunchAtLoginService.shared.isEnabled
@@ -104,7 +105,7 @@ public struct DashboardView: View {
                     MetricBox(
                         title: "PROCESSADOR",
                         value: cpu.name,
-                        subtitle: "\(cpu.totalCores) Cores (\(cpu.pCores)P + \(cpu.eCores)E)",
+                        subtitle: "\(cpu.totalCores) Cores (\(cpu.pCores)P + \(cpu.eCores)E) • \(String(format: "%.1f%%", cpu.overallUsage)) Uso",
                         icon: "cpu",
                         color: .cyan
                     )
@@ -112,9 +113,9 @@ public struct DashboardView: View {
                     MetricBox(
                         title: "MEMÓRIA UNIFICADA",
                         value: String(format: "%.1f GB", ram.totalGB),
-                        subtitle: String(format: "%.1f GB em uso (%.0f%%)", ram.usedGB, ram.usagePercent),
+                        subtitle: String(format: "%.1f GB em uso (%.0f%%) • Pressão: %@", ram.usedGB, ram.usagePercent, ram.pressure.rawValue),
                         icon: "memorychip",
-                        color: .green
+                        color: pressureColor
                     )
                     
                     MetricBox(
@@ -124,6 +125,124 @@ public struct DashboardView: View {
                         icon: "sparkles.tv",
                         color: .purple
                     )
+                }
+                
+                // Carga Detalhada por Núcleo do Apple Silicon (Inspirado em exelban/stats)
+                if !cpu.coreLoads.isEmpty {
+                    CardView {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("CARGA DE PROCESSAMENTO POR NÚCLEO (APPLE SILICON)")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.secondary)
+                                Text("\(cpu.pCores) Núcleos de Performance (P) + \(cpu.eCores) Núcleos de Eficiência (E)")
+                                    .font(.headline)
+                            }
+                            Spacer()
+                            Text(String(format: "Total: %.1f%%", cpu.overallUsage))
+                                .font(.headline)
+                                .foregroundColor(.cyan)
+                        }
+                        
+                        Divider()
+                        
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            ForEach(cpu.coreLoads) { core in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(core.name)
+                                            .font(.caption2)
+                                            .fontWeight(core.isPerformance ? .bold : .regular)
+                                            .foregroundColor(core.isPerformance ? .cyan : .secondary)
+                                        Spacer()
+                                        Text(String(format: "%.0f%%", core.usagePercent))
+                                            .font(.caption2)
+                                            .fontWeight(.bold)
+                                    }
+                                    
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            RoundedRectangle(cornerRadius: 2)
+                                                .fill(Color.white.opacity(0.08))
+                                                .frame(height: 6)
+                                            RoundedRectangle(cornerRadius: 2)
+                                                .fill(core.isPerformance ? Color.cyan : Color.blue)
+                                                .frame(width: max(2, geo.size.width * CGFloat(core.usagePercent / 100.0)), height: 6)
+                                        }
+                                    }
+                                    .frame(height: 6)
+                                }
+                                .padding(8)
+                                .background(Color.white.opacity(0.03))
+                                .cornerRadius(6)
+                            }
+                        }
+                    }
+                }
+                
+                // Top Processos do Sistema (Referência exelban/stats)
+                if !topProcesses.isEmpty {
+                    CardView {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("PROCESSOS COM MAIOR CONSUMO DE RECURSOS")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.secondary)
+                                Text("Monitor de Tarefas Ativas em Tempo Real")
+                                    .font(.headline)
+                            }
+                            Spacer()
+                        }
+                        
+                        Divider()
+                        
+                        VStack(spacing: 8) {
+                            ForEach(topProcesses) { p in
+                                HStack {
+                                    Image(systemName: "app.fill")
+                                        .foregroundColor(.cyan)
+                                        .frame(width: 20)
+                                    
+                                    Text(p.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    
+                                    Text("(PID: \(p.pid))")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    HStack(spacing: 24) {
+                                        HStack(spacing: 4) {
+                                            Text("CPU:")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                            Text(String(format: "%.1f%%", p.cpuPercent))
+                                                .font(.caption)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(p.cpuPercent > 30 ? .red : (p.cpuPercent > 10 ? .orange : .primary))
+                                        }
+                                        
+                                        HStack(spacing: 4) {
+                                            Text("RAM:")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                            Text(String(format: "%.1f%%", p.memoryPercent))
+                                                .font(.caption)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                                .padding(8)
+                                .background(Color.white.opacity(0.02))
+                                .cornerRadius(6)
+                            }
+                        }
+                    }
                 }
                 
                 // Card de Saúde e Diagnóstico de Bateria
@@ -217,7 +336,7 @@ public struct DashboardView: View {
                             percentage: ram.usagePercent,
                             title: "Uso da Memória",
                             subtitle: String(format: "%.1fG Livre", ram.freeGB),
-                            color: ram.usagePercent > 85 ? .red : .green
+                            color: pressureColor
                         )
                         
                         GaugeRingView(
@@ -251,6 +370,13 @@ public struct DashboardView: View {
                                     .foregroundColor(.secondary)
                                 Spacer()
                                 Text(String(format: "%.2f GB", ram.wiredGB))
+                                    .fontWeight(.medium)
+                            }
+                            HStack {
+                                Text("Memória Swap:")
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text(String(format: "%.0f MB usados", ram.swap.usedMB))
                                     .fontWeight(.medium)
                             }
                         }
@@ -410,10 +536,20 @@ public struct DashboardView: View {
             .padding(24)
         }
         .onReceive(timer) { _ in
+            cpu = HardwareService.shared.getCPUInfo()
             ram = HardwareService.shared.getRAMInfo()
             disk = HardwareService.shared.getDiskInfo()
             battery = HardwareService.shared.getBatteryInfo()
             volumes = DiskVolumeService.shared.listMountedVolumes()
+            topProcesses = HardwareService.shared.getTopProcesses(limit: 5)
+        }
+    }
+    
+    private var pressureColor: Color {
+        switch ram.pressure {
+        case .normal: return .green
+        case .warning: return .yellow
+        case .critical: return .red
         }
     }
     

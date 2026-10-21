@@ -1,11 +1,32 @@
 import Foundation
 
+public struct CPUCoreLoad: Identifiable, Equatable, Sendable {
+    public var id: Int
+    public let name: String
+    public let isPerformance: Bool
+    public let usagePercent: Double
+}
+
 public struct CPUInfo: Equatable, Sendable {
     public let name: String
     public let totalCores: Int
     public let pCores: Int
     public let eCores: Int
     public let architecture: String
+    public let overallUsage: Double
+    public let coreLoads: [CPUCoreLoad]
+}
+
+public struct SwapMemoryInfo: Equatable, Sendable {
+    public let totalMB: Double
+    public let usedMB: Double
+    public let freeMB: Double
+}
+
+public enum MemoryPressureState: String, Equatable, Sendable {
+    case normal = "Normal"
+    case warning = "Atenção"
+    case critical = "Crítica"
 }
 
 public struct RAMInfo: Equatable, Sendable {
@@ -14,6 +35,8 @@ public struct RAMInfo: Equatable, Sendable {
     public let wiredGB: Double
     public let compressedGB: Double
     public let freeGB: Double
+    public let pressure: MemoryPressureState
+    public let swap: SwapMemoryInfo
     
     public var usedGB: Double {
         return activeGB + wiredGB + compressedGB
@@ -22,6 +45,14 @@ public struct RAMInfo: Equatable, Sendable {
     public var usagePercent: Double {
         return totalGB > 0 ? min(100.0, max(0.0, (usedGB / totalGB) * 100.0)) : 0
     }
+}
+
+public struct ProcessMetric: Identifiable, Equatable, Sendable {
+    public var id: Int32 { pid }
+    public let pid: Int32
+    public let name: String
+    public let cpuPercent: Double
+    public let memoryPercent: Double
 }
 
 public struct GPUInfo: Equatable, Sendable {

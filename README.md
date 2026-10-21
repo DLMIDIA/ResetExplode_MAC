@@ -29,21 +29,30 @@ Você pode instalar o **ResetExplode** no seu Mac através da imagem oficial **D
 
 ## 🌟 Principais Recursos e Módulos
 
-### 1. ⏱️ Status Item Ativo na Barra de Menus (24/7)
-* **Telemetria Direta no Topo:** Exibe uso instantâneo de RAM e tráfego de download em tempo real diretamente na barra de menus do macOS (ex: `⚡ 52% | ↓ 1.2M`).
-* **Painel Popover Flutuante:** Clique no ícone para abrir um painel rápido com medidores de RAM, rede, status da bateria e botões rápidos para **Limpeza de Memória** e **Flush DNS**.
-* **Permanência Contínua:** Fechar a janela principal não encerra o aplicativo; ele continua rodando silenciosamente na barra de menus, substituindo softwares pesados de terceiros com consumo praticamente nulo de bateria.
+### 1. ⏱️ Status Item Ativo na Barra de Menus (Inspirado em Stats)
+* **Telemetria Direta no Topo:** Exibe instantaneamente no texto da barra de menus do Mac a carga de **CPU**, **RAM** e a velocidade de **Download** (ex: `⚡ CPU 14% | RAM 52% | ↓ 1.2M`).
+* **Painel Popover Flutuante:** Clique no ícone para abrir um painel rápido contendo:
+  * Barra de carga da CPU e medidor de RAM ao vivo.
+  * Indicador de **Pressão de Memória** (Normal / Atenção / Crítica) e Swap do macOS.
+  * Velocímetro de download e upload em tempo real.
+  * **Top 3 processos** mais pesados consumindo CPU.
+  * Medidor de bateria, contagem de ciclos e status de tomada.
+  * Botões de ação rápida: **Limpeza de RAM** e **Flush DNS**.
+* **Permanência Contínua:** Fechar a janela principal não encerra o aplicativo; ele continua rodando silenciosamente na barra de menus com consumo desprezível de bateria e processamento.
 
-### 2. 💻 RESET SISTEMA & Diagnóstico Profundo
-* **Processador Apple Silicon:** Identificação precisa do modelo (Apple M1, M2, M3, M4, M5), separando com exatidão núcleos de **Performance (P-Cores)** e **Eficiência (E-Cores)**.
-* **Memória Unificada:** Detalhamento ao vivo de memória ativa, presa (*wired*), comprimida e livre, com medidor circular de pressão.
+### 2. 💻 RESET SISTEMA & Telemetria Apple Silicon
+* **Processador Apple Silicon & Carga por Núcleo:**
+  * Identificação do modelo exato (Apple M1, M2, M3, M4, M5).
+  * **Monitoramento Núcleo a Núcleo:** Chamadas de baixo nível ao Mach Kernel (`host_processor_info`) inspiradas na arquitetura do projeto [exelban/stats](https://github.com/exelban/stats), exibindo medidores individuais para núcleos de **Performance (P-Cores)** e **Eficiência (E-Cores)**.
+* **Memória Unificada & Pressão:** Detalhamento ao vivo de memória ativa, presa (*wired*), comprimida, livre e uso de arquivo de Swap (`vm.swapusage`), além da classificação de pressão de memória (`memorystatus_vm_pressure_level`).
+* **Monitor de Processos Pesados:** Lista em tempo real os maiores consumidores de CPU e RAM com nome amigável do app e PID.
 * **Diagnóstico Completo da Bateria:**
   * **Ciclos de Carga Reais:** Contagem exata de ciclos (ex: `81 / 1000 ciclos recomendados`).
   * **Saúde Real da Bateria:** Percentual de integridade de fábrica calculado com base na capacidade máxima atual vs. capacidade de projeto original.
   * **Status de Alimentação Inteligente:** Diferenciação entre bateria descarregando, carregando ou conectado à tomada em carga completa (100%).
   * **Tensão e Capacidade:** Leitura precisa em Volts e mAh via telemetria nativa IOKit.
 * **Dispositivos Conectados:**
-  * **Monitores e Telas:** Detecção de resolução nativa, taxa de atualização (Hz), se é tela embutida (Liquid Retina) ou monitor externo (LG UltraWide, etc.).
+  * **Monitores e Telas:** Detecção de resolução nativa, taxa de atualização (Hz) e tipo de tela (Retina integrada vs. monitores externos como LG UltraWide).
   * **Periféricos USB & Áudio:** Mapeamento de microfones (HyperX, etc.), discos externos (Seagate, etc.), interfaces de rede e hubs.
   * **Dispositivos Bluetooth:** Detecção de fones (AirPods Pro, Beats), teclados (MX Keys) e periféricos pareados/conectados.
 * **Discos Rígidos e Partições:** Lista todos os discos montados (SSD principal APFS, discos externos e volumes de rede como *MAC SERVER*) com capacidade total, espaço livre e barra de uso.
@@ -83,6 +92,7 @@ Você pode instalar o **ResetExplode** no seu Mac através da imagem oficial **D
 ## ⚖️ Créditos e Atribuição
 
 * **Conceito Original & Benchmarks (Windows):** Desenvolvido originalmente por **[GustavoReset](https://github.com/GustavoReset)** no projeto [ResetExplode](https://github.com/GustavoReset/ResetExplode) sob licença MIT.
+* **Referência de Telemetria macOS & Menu Bar:** Arquitetura de chamadas Mach Kernel e boas práticas inspiradas no projeto open-source **[Stats](https://github.com/exelban/stats)** por **Serhiy Mytrovtsiy** sob licença MIT.
 * **Adaptação & Edição Nativa macOS:** Desenvolvido por **[DL MIDIA](https://github.com/DLMIDIA/ResetExplode_MAC)**.
 * **Licença:** Distribuído sob os termos da licença **MIT** (veja [LICENSE](LICENSE) para mais detalhes).
 

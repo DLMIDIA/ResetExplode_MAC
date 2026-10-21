@@ -14,7 +14,7 @@ public struct AboutView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("RESET EXPLODE")
                             .font(.system(size: 24, weight: .black, design: .rounded))
-                        Text("Edição Nativa macOS • Apple Silicon")
+                        Text("Edição Nativa macOS • Apple Silicon (v1.1.0)")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -28,20 +28,26 @@ public struct AboutView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.cyan)
                     
-                    Text("O **ResetExplode MAC** é uma adaptação 100% nativa desenvolvida em Swift para o ecossistema Apple Silicon (M1, M2, M3, M4, M5), trazendo as consagradas ferramentas de diagnóstico de hardware, benchmarks e utilitários para computadores Mac.")
+                    Text("O **ResetExplode MAC** é uma suíte de software nativa em Swift para o ecossistema Apple Silicon (M1, M2, M3, M4, M5), trazendo ferramentas avançadas de diagnóstico de hardware em tempo real, telemetria contínua na barra de menus, benchmarks de CPU e discos, otimização de memória/caches e ferramentas para eletrônica e makers.")
                         .font(.body)
                         .foregroundColor(.primary)
                 }
                 
                 CardView {
-                    Text("CRÉDITOS E ATRIBUIÇÃO")
+                    Text("CRÉDITOS, ATRIBUIÇÃO & REFERÊNCIAS")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.green)
                     
-                    Text("• **Conceito Original & Benchmarks:** Desenvolvido originalmente por **GustavoReset** ([github.com/GustavoReset/ResetExplode](https://github.com/GustavoReset/ResetExplode)) sob licença MIT.\n• **Portabilidade & Edição macOS:** Desenvolvido por **DL MIDIA** ([github.com/DLMIDIA/ResetExplode_MAC](https://github.com/DLMIDIA/ResetExplode_MAC)).")
-                        .font(.callout)
-                        .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("• **Conceito Original & Benchmarks (Windows):** Criado por **GustavoReset** ([github.com/GustavoReset/ResetExplode](https://github.com/GustavoReset/ResetExplode)) sob licença MIT.")
+                        
+                        Text("• **Referência de Telemetria macOS & Menu Bar:** Inspirado nas melhores práticas de chamadas ao Mach Kernel e arquitetura de monitoramento do consagrado projeto open-source **Stats** por **Serhiy Mytrovtsiy** ([github.com/exelban/stats](https://github.com/exelban/stats)) sob licença MIT.")
+                        
+                        Text("• **Adaptação, Arquitetura Apple Silicon & Suíte Mac:** Desenvolvido por **DL MIDIA** ([github.com/DLMIDIA/ResetExplode_MAC](https://github.com/DLMIDIA/ResetExplode_MAC)).")
+                    }
+                    .font(.callout)
+                    .foregroundColor(.secondary)
                 }
                 
                 CardView {
@@ -50,7 +56,7 @@ public struct AboutView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.secondary)
                     
-                    Text("Este software é distribuído gratuitamente sob os termos da licença MIT. Você tem a liberdade de usar, modificar e distribuir, mantendo os devidos créditos de autoria originais.")
+                    Text("Este software é distribuído gratuitamente sob os termos da licença MIT. Você tem a liberdade de usar, modificar e distribuir o código-fonte, preservando os devidos créditos de autoria.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

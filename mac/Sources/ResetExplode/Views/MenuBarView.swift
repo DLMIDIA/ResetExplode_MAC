@@ -2,9 +2,12 @@ import SwiftUI
 import AppKit
 
 public struct MenuBarView: View {
+    @State private var cpu = HardwareService.shared.getCPUInfo()
     @State private var ram = HardwareService.shared.getRAMInfo()
     @State private var net = NetworkService.shared.getCurrentStats()
     @State private var battery = HardwareService.shared.getBatteryInfo()
+    @State private var topProcesses = HardwareService.shared.getTopProcesses(limit: 3)
+    
     @State private var isCleaning = false
     @State private var cleanMessage: String?
     @State private var launchAtLogin = LaunchAtLoginService.shared.isEnabled
@@ -25,7 +28,7 @@ public struct MenuBarView: View {
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
-                    Text("Monitor de Status Apple Silicon")
+                    Text("Status & Telemetria Apple Silicon")
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
@@ -37,7 +40,25 @@ public struct MenuBarView: View {
             
             Divider()
             
-            // RAM Bar
+            // CPU Load (Inspirado em Stats)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: "cpu")
+                        .foregroundColor(.cyan)
+                    Text("Processador:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text(String(format: "%.1f%%", cpu.overallUsage))
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.cyan)
+                }
+                ProgressView(value: cpu.overallUsage, total: 100.0)
+                    .accentColor(.cyan)
+            }
+            
+            // RAM Bar & Pressão (Inspirado em Stats)
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: "memorychip")
@@ -46,15 +67,26 @@ public struct MenuBarView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text(String(format: "%.1fG / %.0fG (%.0f%%)", ram.usedGB, ram.totalGB, ram.usagePercent))
-                        .font(.caption)
-                        .fontWeight(.bold)
+                    
+                    HStack(spacing: 4) {
+                        Text(String(format: "%.1fG / %.0fG (%.0f%%)", ram.usedGB, ram.totalGB, ram.usagePercent))
+                            .font(.caption)
+                            .fontWeight(.bold)
+                        
+                        Text(ram.pressure.rawValue)
+                            .font(.system(size: 8, weight: .bold))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(pressureColor.opacity(0.2))
+                            .foregroundColor(pressureColor)
+                            .cornerRadius(3)
+                    }
                 }
                 ProgressView(value: ram.usagePercent, total: 100.0)
-                    .accentColor(ram.usagePercent > 85 ? .red : .green)
+                    .accentColor(pressureColor)
             }
             
-            // Rede
+            // Rede (Download / Upload)
             HStack(spacing: 12) {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.circle.fill")
@@ -77,6 +109,30 @@ public struct MenuBarView: View {
             .padding(8)
             .background(Color.white.opacity(0.04))
             .cornerRadius(6)
+            
+            // Top Processos (Referência exelban/stats)
+            if !topProcesses.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("MAIORES CONSUMIDORES (CPU)")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.secondary)
+                    
+                    ForEach(topProcesses) { p in
+                        HStack {
+                            Text(p.name)
+                                .font(.system(size: 11))
+                                .lineLimit(1)
+                            Spacer()
+                            Text(String(format: "%.1f%%", p.cpuPercent))
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(p.cpuPercent > 20 ? .orange : .secondary)
+                        }
+                    }
+                }
+                .padding(8)
+                .background(Color.white.opacity(0.03))
+                .cornerRadius(6)
+            }
             
             // Bateria e Ciclos
             if battery.isPresent {
@@ -171,12 +227,22 @@ public struct MenuBarView: View {
             }
         }
         .padding(14)
-        .frame(width: 290)
+        .frame(width: 300)
         .onReceive(timer) { _ in
+            cpu = HardwareService.shared.getCPUInfo()
             ram = HardwareService.shared.getRAMInfo()
             net = NetworkService.shared.getCurrentStats()
             battery = HardwareService.shared.getBatteryInfo()
+            topProcesses = HardwareService.shared.getTopProcesses(limit: 3)
             launchAtLogin = LaunchAtLoginService.shared.isEnabled
+        }
+    }
+    
+    private var pressureColor: Color {
+        switch ram.pressure {
+        case .normal: return .green
+        case .warning: return .yellow
+        case .critical: return .red
         }
     }
     

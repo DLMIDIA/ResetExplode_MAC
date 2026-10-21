@@ -27,7 +27,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         let pop = NSPopover()
-        pop.contentSize = NSSize(width: 320, height: 500)
+        pop.contentSize = NSSize(width: 320, height: 560)
         pop.behavior = .transient
         pop.contentViewController = NSHostingController(rootView: MenuBarView())
         self.popover = pop
@@ -47,7 +47,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     public func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        // Permite que o app continue rodando silenciosamente na Barra de Menus
+        // Permite que o app continue rodando silenciosamente na Barra de Menus 24/7
         return false
     }
     
@@ -82,6 +82,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func updateStatusBarText() {
+        let cpu = HardwareService.shared.getCPUInfo()
         let ram = HardwareService.shared.getRAMInfo()
         let net = NetworkService.shared.getCurrentStats()
         
@@ -93,6 +94,6 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         guard let button = self.statusItem?.button else { return }
-        button.title = String(format: " %.0f%% | ↓%@", ram.usagePercent, speedStr)
+        button.title = String(format: " CPU %.0f%% | RAM %.0f%% | ↓%@", cpu.overallUsage, ram.usagePercent, speedStr)
     }
 }
