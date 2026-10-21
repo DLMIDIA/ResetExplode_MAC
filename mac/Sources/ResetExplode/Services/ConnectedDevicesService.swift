@@ -1,12 +1,18 @@
 import Foundation
 import AppKit
 import IOKit
-import IOBluetooth
 
 public final class ConnectedDevicesService: @unchecked Sendable {
     public static let shared = ConnectedDevicesService()
     
-    private init() {}
+    private var cachedBluetooth: [ConnectedBluetoothDevice] = []
+    private let btLock = NSLock()
+    private var lastBtFetch: CFAbsoluteTime = 0
+    
+    private init() {
+        // Inicializa com busca em background para não travar a inicialização
+        refreshBluetoothDevicesAsync()
+    }
     
     public func getConnectedDisplays() -> [ConnectedDisplay] {
         var displays: [ConnectedDisplay] = []
@@ -73,23 +79,70 @@ public final class ConnectedDevicesService: @unchecked Sendable {
     }
     
     public func getBluetoothDevices() -> [ConnectedBluetoothDevice] {
-        var devices: [ConnectedBluetoothDevice] = []
+        btLock.lock()
+        defer { btLock.unlock() }
         
-        if let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] {
-            for dev in paired {
-                let name = dev.nameOrAddress ?? "Dispositivo Bluetooth"
-                let address = dev.addressString ?? ""
-                let isConnected = dev.isConnected()
-                
-                devices.append(ConnectedBluetoothDevice(
-                    name: name,
-                    address: address,
-                    isConnected: isConnected
-                ))
-            }
+        // Se já passou mais de 15 segundos desde a última busca, atualiza em background
+        if CFAbsoluteTimeGetCurrent() - lastBtFetch > 15.0 {
+            refreshBluetoothDevicesAsync()
         }
         
-        return devices
+        return cachedBluetooth
+    }
+    
+    public func refreshBluetoothDevicesAsync(completion: (@Sendable ([ConnectedBluetoothDevice]) -> Void)? = nil) {
+        DispatchQueue.global(qos: .utility).async {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+            proc.arguments = ["SPBluetoothDataType", "-json"]
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            try? proc.run()
+            proc.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            var result: [ConnectedBluetoothDevice] = []
+            
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let list = json["SPBluetoothDataType"] as? [[String: Any]] {
+                for item in list {
+                    // Dispositivos Conectados Ativamente
+                    if let conn = item["device_connected"] as? [[String: Any]] {
+                        for d in conn {
+                            for (name, val) in d {
+                                var addr = ""
+                                if let info = val as? [String: Any] {
+                                    addr = (info["device_address"] as? String) ?? ""
+                                }
+                                result.append(ConnectedBluetoothDevice(name: name, address: addr, isConnected: true))
+                            }
+                        }
+                    }
+                    // Dispositivos Pareados (Não Conectados no momento)
+                    if let notConn = item["device_not_connected"] as? [[String: Any]] {
+                        for d in notConn {
+                            for (name, val) in d {
+                                var addr = ""
+                                if let info = val as? [String: Any] {
+                                    addr = (info["device_address"] as? String) ?? ""
+                                }
+                                result.append(ConnectedBluetoothDevice(name: name, address: addr, isConnected: false))
+                            }
+                        }
+                    }
+                }
+            }
+            
+            self.btLock.lock()
+            if !result.isEmpty {
+                self.cachedBluetooth = result
+            }
+            self.lastBtFetch = CFAbsoluteTimeGetCurrent()
+            let copy = self.cachedBluetooth
+            self.btLock.unlock()
+            
+            completion?(copy)
+        }
     }
     
     public func getSummary() -> ConnectedDevicesSummary {

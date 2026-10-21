@@ -543,6 +543,9 @@ public struct DashboardView: View {
             volumes = DiskVolumeService.shared.listMountedVolumes()
             topProcesses = HardwareService.shared.getTopProcesses(limit: 5)
         }
+        .onAppear {
+            refreshDevices()
+        }
     }
     
     private var pressureColor: Color {
@@ -555,6 +558,11 @@ public struct DashboardView: View {
     
     private func refreshDevices() {
         connectedDevices = ConnectedDevicesService.shared.getSummary()
+        ConnectedDevicesService.shared.refreshBluetoothDevicesAsync { _ in
+            DispatchQueue.main.async {
+                self.connectedDevices = ConnectedDevicesService.shared.getSummary()
+            }
+        }
     }
     
     private func iconForUSB(name: String) -> String {
